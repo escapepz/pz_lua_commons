@@ -1,0 +1,27 @@
+[submodule "submodule/grafi-tt/lunajson"]
+	path = submodule/grafi-tt/lunajson
+	url = https://github.com/grafi-tt/lunajson
+[submodule "submodule/rxi/json.lua"]
+	path = submodule/rxi/json.lua
+	url = https://github.com/rxi/json.lua
+[submodule "submodule/kikito/middleclass"]
+	path = submodule/kikito/middleclass
+	url = https://github.com/kikito/middleclass
+[submodule "submodule/Yonaba/30log"]
+	path = submodule/Yonaba/30log
+	url = https://github.com/Yonaba/30log
+[submodule "submodule/Yonaba/Moses"]
+	path = submodule/Yonaba/Moses
+	url = https://github.com/Yonaba/Moses
+[submodule "submodule/pkulchenko/serpent"]
+	path = submodule/pkulchenko/serpent
+	url = https://github.com/pkulchenko/serpent
+[submodule "submodule/kikito/inspect.lua"]
+	path = submodule/kikito/inspect.lua
+	url = https://github.com/kikito/inspect.lua
+[submodule "submodule/rxi/lume"]
+	path = submodule/rxi/lume
+	url = https://github.com/rxi/lume
+[submodule "submodule/vrld/hump"]
+	path = submodule/vrld/hump
+	url = https://github.com/vrld/hump
