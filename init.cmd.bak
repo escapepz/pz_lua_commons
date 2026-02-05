@@ -1,0 +1,14 @@
+git submodule add https://github.com/grafi-tt/lunajson submodule/grafi-tt/lunajson
+
+git submodule add https://github.com/rxi/json.lua submodule/rxi/json.lua
+git submodule add https://github.com/rxi/lume submodule/rxi/lume
+
+git submodule add https://github.com/kikito/middleclass submodule/kikito/middleclass
+git submodule add https://github.com/kikito/inspect.lua submodule/kikito/inspect.lua
+
+git submodule add https://github.com/Yonaba/30log submodule/Yonaba/30log
+git submodule add https://github.com/Yonaba/Moses submodule/Yonaba/Moses
+
+git submodule add https://github.com/vrld/hump submodule/vrld/hump
+
+git submodule add https://github.com/pkulchenko/serpent submodule/pkulchenko/serpent

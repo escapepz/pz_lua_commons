@@ -10,9 +10,6 @@
 [submodule "submodule/Yonaba/30log"]
 	path = submodule/Yonaba/30log
 	url = https://github.com/Yonaba/30log
-[submodule "submodule/Yonaba/Moses"]
-	path = submodule/Yonaba/Moses
-	url = https://github.com/Yonaba/Moses
 [submodule "submodule/pkulchenko/serpent"]
 	path = submodule/pkulchenko/serpent
 	url = https://github.com/pkulchenko/serpent
