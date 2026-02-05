@@ -14,7 +14,8 @@ local snum = {
 }
 
 local badtype = { thread = true, userdata = true, cdata = true }
-local keyword, globals, G = {}, {}, _G
+-- local keyword, globals, G = {}, {}, _G
+local keyword, globals, G = {}, {}
 
 for _, k in ipairs({
 	"and", "break", "do", "else",	"elseif", "end",	
@@ -23,15 +24,15 @@ for _, k in ipairs({
 }) do
 	keyword[k] = true
 end
-for k, v in pairs(G) do
-	globals[v] = k
-end -- build func to name mapping
+-- for k, v in pairs(G) do
+-- 	globals[v] = k
+-- end -- build func to name mapping
 -- for _,g in ipairs({'coroutine', 'debug', 'io', 'math', 'string', 'table', 'os'}) do
-for _, g in ipairs({ "coroutine", "io", "math", "string", "table", "os" }) do
-	for k, v in pairs(type(G[g]) == "table" and G[g] or {}) do
-		globals[v] = g .. "." .. k
-	end
-end
+-- for _, g in ipairs({ "coroutine", "io", "math", "string", "table", "os" }) do
+-- 	for k, v in pairs(type(G[g]) == "table" and G[g] or {}) do
+-- 		globals[v] = g .. "." .. k
+-- 	end
+-- end
 
 local function s(t, opts)
 	local name, indent, fatal, maxnum = opts.name, opts.indent, opts.fatal, opts.maxnum

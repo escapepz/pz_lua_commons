@@ -5,13 +5,19 @@
     "workshop": {
         "visibility": "unlisted",
         "tags": [
-            "Build 42"
+            "Build 42",
+			"Framework",
+			"WIP"
         ],
-        "excludes": []
+        "excludes": ["pz_lua_commons_test"]
     },
     "mods": {
         "pz_lua_commons": {
             "name": "PZLuaCommons",
+            "description": ""
+        },
+        "pz_lua_commons_test": {
+            "name": "pz_lua_commons_test",
             "description": ""
         }
     }

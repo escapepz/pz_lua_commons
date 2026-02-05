@@ -1,0 +1,10 @@
+magick -size 512x512 xc:"#0d0d0d" ^
+  -stroke "#c9a24d" -strokewidth 2 -fill none -draw "rectangle 1,1 510,510" ^
+  -font "Courier-New" -fill "#c9a24d" ^
+  -pointsize 20 -gravity NorthWest -annotate +16+16 "[B42]" ^
+  -gravity NorthEast -annotate +16+16 "ESC" ^
+  -gravity Center ^
+  -pointsize 82 -annotate +0-72 "PZ" ^
+  -pointsize 95 -annotate +0+0  "Lua" ^
+  -pointsize 82 -annotate +0+72 "Commons" ^
+  -colorspace sRGB -depth 8 output.png

@@ -5,6 +5,7 @@
         "watch": "pzstudio clean && pzstudio build && pzstudio watch",
         "update": "pzstudio update",
         "experimental:setup:vanilla": "mkdir .tmp & mklink /J \"%CD%\\.tmp\\vanilla\" \"%ProgramFiles(x86)%\\Steam\\steamapps\\common\\ProjectZomboid\\media\\lua\"",
-        "experimental:setup:nonsteam:pz_lua_commons": "mklink /J \"C:\\ZomboidClient1\\mods\\pz_lua_commons\" \"%CD%\\pz_lua_commons\""
+        "experimental:setup:nonsteam:pz_lua_commons": "mklink /J \"C:\\ZomboidClient1\\mods\\pz_lua_commons\" \"%CD%\\pz_lua_commons\"",
+        "experimental:setup:nonsteam:pz_lua_commons_test": "mklink /J \"C:\\ZomboidClient1\\mods\\pz_lua_commons_test\" \"%CD%\\pz_lua_commons_test\""
     }
 }

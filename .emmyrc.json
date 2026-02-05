@@ -12,6 +12,7 @@
             "Logs",
             "tmp",
             "submodule",
+            "pz_lua_commons/common/media/lua/client/pz_lua_commons",
             "pz_lua_commons/common/media/lua/shared/pz_lua_commons"
         ]
     },
