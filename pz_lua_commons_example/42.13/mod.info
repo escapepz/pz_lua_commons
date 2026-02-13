@@ -1,0 +1,5 @@
+id=pz_lua_commons_example
+name=PZLuaCommons Example
+poster=poster.png
+icon=icon.png
+require=\pz_lua_commons

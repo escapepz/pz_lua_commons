@@ -1,31 +1,15 @@
 local inspectlua, serpent, yon_30log
 
-local function safe_require(path)
-	local ok, _module = pcall(require, path)
-	if ok then
-		return _module
-	end
-	return nil
-end
+local safe_require = require("pz_utils/escape/safe_require")
+local safe_logger = require("pz_utils/escape/safe_logger")
+safe_logger.init("pz_lua_commons")
 
-local safeLog = safe_require("pz_lua_commons/safelogger")
-local function warn_missing(name)
-	if isMultiplayer() then
-		pcall(function()
-			safeLog("missing module: " .. tostring(name), true)
-		end)
-	end
-end
-
+-- Strictly client-side only.
 if not isServer() then
-	inspectlua = safe_require("pz_lua_commons/kikito/inspectlua_v3_1_3/inspect")
-	serpent = safe_require("pz_lua_commons/pkulchenko/serpent_0_30/serpent")
-	yon_30log = safe_require("pz_lua_commons/yonaba/yon_30log_1_3_0/yon_30log")
+	inspectlua = safe_require("pz_lua_commons/kikito/inspectlua_v3_1_3/inspect", "inspectlua")
+	serpent = safe_require("pz_lua_commons/pkulchenko/serpent_0_30/serpent", "serpent")
+	yon_30log = safe_require("pz_lua_commons/yonaba/yon_30log_1_3_0/yon_30log", "30log")
 end
-
-if	not	inspectlua	then	warn_missing("inspectlua")	end
-if	not	serpent		then	warn_missing("serpent")		end
-if	not	yon_30log	then	warn_missing("30log")			end
 
 local pz_lua_commons = {
 	kikito = {
@@ -39,5 +23,5 @@ local pz_lua_commons = {
 	},
 }
 
-safeLog("Client Loaded")
+safe_logger.log("Client Loaded", 20)
 return pz_lua_commons
