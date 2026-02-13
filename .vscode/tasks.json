@@ -1,0 +1,14 @@
+{
+    "label": "Run Tests",
+    "type": "shell",
+    "command": "lua",
+    "args": ["test_common_lib.lua"],
+    "options": {
+        "cwd": "${workspaceFolder}/TEST_SUITE/tests"
+    },
+    "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+    },
+    "problemMatcher": []
+}

@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Test Suite",
+            "type": "lua",
+            "request": "launch",
+            "program": "${workspaceFolder}/TEST_SUITE/tests/test_common_lib.lua",
+            "cwd": "${workspaceFolder}/TEST_SUITE/tests",
+            "stopOnEntry": false
+        },
+        {
+            "name": "Debug Example",
+            "type": "lua",
+            "request": "launch",
+            "program": "${workspaceFolder}/TEST_SUITE/examples/example_usage.lua",
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false
+        }
+    ]
+}
