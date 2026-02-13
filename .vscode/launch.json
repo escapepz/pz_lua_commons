@@ -2,10 +2,26 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Test Suite",
+            "name": "Debug All Tests (test_common_lib)",
             "type": "lua",
             "request": "launch",
             "program": "${workspaceFolder}/TEST_SUITE/tests/test_common_lib.lua",
+            "cwd": "${workspaceFolder}/TEST_SUITE/tests",
+            "stopOnEntry": false
+        },
+        {
+            "name": "Debug Konijima Tests",
+            "type": "lua",
+            "request": "launch",
+            "program": "${workspaceFolder}/TEST_SUITE/tests/test_pz_utils_konijima.lua",
+            "cwd": "${workspaceFolder}/TEST_SUITE/tests",
+            "stopOnEntry": false
+        },
+        {
+            "name": "Debug Escape Tests",
+            "type": "lua",
+            "request": "launch",
+            "program": "${workspaceFolder}/TEST_SUITE/tests/test_pz_utils_escape.lua",
             "cwd": "${workspaceFolder}/TEST_SUITE/tests",
             "stopOnEntry": false
         },

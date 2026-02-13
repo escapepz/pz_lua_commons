@@ -2,6 +2,7 @@
     "recommendations": [
         "JohnnyMorganz.stylua",
         "tangzx.emmylua",
-        "simkdt.project-zomboid-scripts"
+        "simkdt.project-zomboid-scripts",
+        "actboy168.lua-debug"
     ]
 }

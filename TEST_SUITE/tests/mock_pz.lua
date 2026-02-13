@@ -440,23 +440,228 @@ end
 
 mock_pz.SignalRegistry = SignalRegistry
 
+-- ============================================================================
+-- ADMIN/STAFF PERMISSION SYSTEM (Konijima utilities)
+-- ============================================================================
+
+-- Admin/Staff status (mockable)
+local admin_list = {}  -- Set of admin names
+local staff_list = {}  -- Set of staff names
+local client_is_admin = false
+local client_is_staff = false
+
+-- Add admin (for testing)
+function mock_pz.AddAdmin(username)
+	admin_list[username] = true
+end
+
+-- Remove admin
+function mock_pz.RemoveAdmin(username)
+	admin_list[username] = nil
+end
+
+-- Add staff
+function mock_pz.AddStaff(username)
+	staff_list[username] = true
+end
+
+-- Remove staff
+function mock_pz.RemoveStaff(username)
+	staff_list[username] = nil
+end
+
+-- Get admin list
+function mock_pz.GetAdminList()
+	local list = {}
+	for name, _ in pairs(admin_list) do
+		table.insert(list, name)
+	end
+	return list
+end
+
+-- Get staff list
+function mock_pz.GetStaffList()
+	local list = {}
+	for name, _ in pairs(staff_list) do
+		table.insert(list, name)
+	end
+	return list
+end
+
+-- Check if specific user is admin
+function mock_pz.IsUserAdmin(username)
+	return admin_list[username] or false
+end
+
+-- Check if specific user is staff
+function mock_pz.IsUserStaff(username)
+	return staff_list[username] or false
+end
+
+-- Set client admin status (for testing)
+function mock_pz.SetClientAdmin(is_admin)
+	client_is_admin = is_admin or false
+end
+
+-- Set client staff status (for testing)
+function mock_pz.SetClientStaff(is_staff)
+	client_is_staff = is_staff or false
+end
+
+-- Get client admin status
+function mock_pz.GetClientAdmin()
+	return client_is_admin
+end
+
+-- Get client staff status
+function mock_pz.GetClientStaff()
+	return client_is_staff
+end
+
+-- ============================================================================
+-- KONIJIMA UTILITIES MOCKS
+-- ============================================================================
+
+-- Konijima namespace
+mock_pz.konijima = {}
+
+-- Client environment checks
+function mock_pz.konijima.IsSinglePlayer()
+	return true  -- Default: single player for testing
+end
+
+function mock_pz.konijima.IsSinglePlayerDebug()
+	return false
+end
+
+function mock_pz.konijima.IsClientOnly()
+	return not mock_pz.isServer()
+end
+
+function mock_pz.konijima.IsClientOrSinglePlayer()
+	return mock_pz.konijima.IsClientOnly() or mock_pz.konijima.IsSinglePlayer()
+end
+
+function mock_pz.konijima.IsServerOrSinglePlayer()
+	return mock_pz.isServer() or mock_pz.konijima.IsSinglePlayer()
+end
+
+-- Admin/Staff checks
+function mock_pz.konijima.IsClientAdmin()
+	return client_is_admin
+end
+
+function mock_pz.konijima.IsClientStaff()
+	return client_is_staff
+end
+
+-- String utilities
+function mock_pz.konijima.SplitString(str, delimiter)
+	if not str or str == "" then
+		return {}
+	end
+	
+	local result = {}
+	local pattern = "([^" .. delimiter .. "]*)"
+	for match in string.gmatch(str .. delimiter, pattern .. delimiter) do
+		table.insert(result, match)
+	end
+	return result
+end
+
+-- Square utilities
+function mock_pz.konijima.SquareToString(square)
+	if not square then return nil end
+	return square.x .. "|" .. square.y .. "|" .. square.z
+end
+
+function mock_pz.konijima.StringToSquare(str)
+	if not str then return nil end
+	local parts = mock_pz.konijima.SplitString(str, "|")
+	if #parts >= 3 then
+		return {
+			x = tonumber(parts[1]),
+			y = tonumber(parts[2]),
+			z = tonumber(parts[3])
+		}
+	end
+	return nil
+end
+
+-- Network commands (no-ops for testing)
+function mock_pz.konijima.SendClientCommand(module, command, args)
+	-- Mock: just succeed
+	return true
+end
+
+function mock_pz.konijima.SendServerCommandTo(player, module, command, args)
+	-- Mock: just succeed
+	return true
+end
+
+function mock_pz.konijima.SendServerCommandToAll(module, command, args)
+	-- Mock: just succeed
+	return true
+end
+
+function mock_pz.konijima.SendServerCommandToAllInRange(x, y, z, minx, maxx, module, command, args)
+	-- Mock: just succeed
+	return true
+end
+
+-- Player utilities
+function mock_pz.konijima.GetPlayerFromUsername(username)
+	-- Mock: return nil (no player in test environment)
+	return nil
+end
+
+function mock_pz.konijima.IsPlayerInRange(player, x, y, startX, endX, distance)
+	-- Mock: return false if no player
+	if not player then return false end
+	return true  -- Assume in range if player exists
+end
+
+-- Electricity utilities
+function mock_pz.konijima.SquareHasElectricity(square)
+	-- Mock: return false by default
+	return false
+end
+
+-- Server information
+function mock_pz.konijima.GetServerName()
+	return "Test Server"
+end
+
+-- Inventory utilities
+function mock_pz.konijima.FindAllItemInInventoryByTag(inventory, tag)
+	-- Mock: return empty list
+	return {}
+end
+
+-- Moveable object utilities
+function mock_pz.konijima.GetMoveableDisplayName(moveable)
+	-- Mock: return nil for invalid input
+	if not moveable then return nil end
+	return moveable.displayName or "Object"
+end
+
 function mock_pz.setupGlobalEnvironment()
-    -- Make common functions global for testing
-    _G.print = print
-    _G.ArrayList = ArrayList
-    _G.HashMap = HashMap
-    _G.Vector2f = Vector2f
-    _G.Vector3f = Vector3f
-    _G.GameState = GameState
-    _G.Item = Item
-    _G.Character = Character
-    _G.Coroutine = Coroutine
-    _G.Registry = Registry
-    _G.GetTickCount = mock_pz.GetTickCount
-    _G.GetCurrentTimeMs = mock_pz.GetCurrentTimeMs
-    _G.isServer = mock_pz.isServer
-    _G.isClient = mock_pz.isClient
-    _G.isSingleplayer = mock_pz.isSingleplayer
+	-- Make common functions global for testing
+	_G.print = print
+	_G.ArrayList = ArrayList
+	_G.HashMap = HashMap
+	_G.Vector2f = Vector2f
+	_G.Vector3f = Vector3f
+	_G.GameState = GameState
+	_G.Item = Item
+	_G.Character = Character
+	_G.Coroutine = Coroutine
+	_G.Registry = Registry
+	_G.GetTickCount = mock_pz.GetTickCount
+	_G.GetCurrentTimeMs = mock_pz.GetCurrentTimeMs
+	_G.isServer = mock_pz.isServer
+	_G.isClient = mock_pz.isClient
+	_G.isSingleplayer = mock_pz.isSingleplayer
 end
 
 return mock_pz
