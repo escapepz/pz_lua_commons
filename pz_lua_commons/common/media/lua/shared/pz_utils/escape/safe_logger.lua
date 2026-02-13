@@ -106,7 +106,7 @@ end
 
 --- Log a message with optional level
 ---@param msg any
----@param level string|number TRACE = 10 | DEBUG = 20 | INFO = 30 | WARN = 40 | ERROR = 50 | FATAL = 60
+---@param level string|number|nil TRACE = 10 | DEBUG = 20 | INFO = 30 | WARN = 40 | ERROR = 50 | FATAL = 60
 function SafeLogger.log(msg, level)
 	safeLog(msg, level)
 end
