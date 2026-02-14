@@ -46,6 +46,20 @@
                 "panel": "shared"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Run Escape Tests 2",
+            "type": "shell",
+            "command": "lua",
+            "args": ["test_sandbox_vars_module.lua"],
+            "options": {
+                "cwd": "${workspaceFolder}/TEST_SUITE/tests"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
         }
     ]
 }

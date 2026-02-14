@@ -4,12 +4,8 @@
     "authors": [],
     "workshop": {
         "visibility": "unlisted",
-        "tags": [
-            "Build 42",
-			"Framework",
-			"WIP"
-        ],
-        "excludes": ["pz_lua_commons_test"]
+        "tags": ["Build 42", "Framework", "WIP"],
+        "excludes": ["pz_lua_commons_test", "pz_lua_commons_example"]
     },
     "mods": {
         "pz_lua_commons": {
@@ -18,6 +14,10 @@
         },
         "pz_lua_commons_test": {
             "name": "pz_lua_commons_test",
+            "description": ""
+        },
+        "pz_lua_commons_example": {
+            "name": "pz_lua_commons_example",
             "description": ""
         }
     }

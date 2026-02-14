@@ -26,6 +26,14 @@
             "stopOnEntry": false
         },
         {
+            "name": "Debug Escape test_sandbox_vars_module",
+            "type": "lua",
+            "request": "launch",
+            "program": "${workspaceFolder}/TEST_SUITE/tests/test_sandbox_vars_module.lua",
+            "cwd": "${workspaceFolder}/TEST_SUITE/tests",
+            "stopOnEntry": false
+        },
+        {
             "name": "Debug Example",
             "type": "lua",
             "request": "launch",

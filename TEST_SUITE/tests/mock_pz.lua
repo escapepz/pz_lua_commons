@@ -519,6 +519,54 @@ function mock_pz.GetClientStaff()
 end
 
 -- ============================================================================
+-- SANDBOX VARIABLES MOCK
+-- ============================================================================
+
+-- SandboxVars mock for testing mod configurations
+local SandboxVars = {}
+
+-- Add some default vanilla sandbox variables for testing
+SandboxVars.HoursForLootRespawn = 72
+SandboxVars.DayLength = 1
+SandboxVars.StartYear = 1993
+SandboxVars.StartMonth = 7
+SandboxVars.StartDay = 9
+
+-- Initialize mod-specific namespace
+function SandboxVars:InitModNamespace(namespace)
+	if not self[namespace] then
+		self[namespace] = {}
+	end
+	return self[namespace]
+end
+
+-- Get or create a mod namespace
+function SandboxVars:GetModNamespace(namespace)
+	if not self[namespace] then
+		self[namespace] = {}
+	end
+	return self[namespace]
+end
+
+-- Set a value in a mod namespace
+function SandboxVars:SetModValue(namespace, key, value)
+	if not self[namespace] then
+		self[namespace] = {}
+	end
+	self[namespace][key] = value
+end
+
+-- Get a value from a mod namespace
+function SandboxVars:GetModValue(namespace, key, defaultValue)
+	if not self[namespace] then
+		return defaultValue
+	end
+	return self[namespace][key] or defaultValue
+end
+
+mock_pz.SandboxVars = SandboxVars
+
+-- ============================================================================
 -- KONIJIMA UTILITIES MOCKS
 -- ============================================================================
 
@@ -662,6 +710,7 @@ function mock_pz.setupGlobalEnvironment()
 	_G.isServer = mock_pz.isServer
 	_G.isClient = mock_pz.isClient
 	_G.isSingleplayer = mock_pz.isSingleplayer
+	_G.SandboxVars = mock_pz.SandboxVars
 end
 
 return mock_pz

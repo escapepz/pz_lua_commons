@@ -156,6 +156,7 @@ function EventManager.createEvent(name)
 		end,
 
 		---Set maximum listener count for this event (enables pruning)
+		---@warning SHOULD only called during initialization (count=0)
 		---@param self table
 		---@param count number Maximum listeners allowed
 		---@return table self
