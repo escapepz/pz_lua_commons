@@ -1,6 +1,6 @@
 ---@author eScape
 -- https://github.com/escapepz
--- media\lua\server\ -- utils\event_management.lua
+-- pz_lua_commons\common\media\lua\shared\pz_utils\escape\event_management.lua
 -- Centralized Custom Event Manager
 -- Manages custom events and controls when built-in periodic events are triggered
 
@@ -10,10 +10,15 @@ EventManager.events = {}
 
 -- Cache hot path functions to avoid repeated table lookups
 local _pcall = pcall
+local _pairs = pairs
 local _ipairs = ipairs
+local _print = print
+local _type, _error = type, error
 local _table_insert = table.insert
 local _table_remove = table.remove
+local _table_sort = table.sort
 local _tostring = tostring
+local _math_floor = math.floor
 
 ---Create a new custom event
 ---@param name string Event name
@@ -28,16 +33,61 @@ function EventManager.createEvent(name)
 		listeners = {},
 		enabled = true,
 		_executing = false,
+		maxListeners = nil,
+		_pruneCallback = nil,
 
-		---Add a listener callback to this event
+		---Add a listener with binary insertion (maintains sort by priority)
 		---@param self table
 		---@param callback function
+		---@param priority number Optional priority (default 0, higher executes first)
 		---@return table self
-		Add = function(self, callback)
-			if type(callback) ~= "function" then
-				error("EventManager: callback must be a function for event '" .. self.name .. "'")
+		Add = function(self, callback, priority)
+			priority = priority or 0
+
+			if _type(callback) ~= "function" then
+				_error("EventManager: callback must be a function for event '" .. self.name .. "'")
 			end
-			_table_insert(self.listeners, callback)
+
+			-- Binary search for insertion point (higher priority first)
+			local left, right = 1, #self.listeners
+			local insertPos = #self.listeners + 1
+
+			while left <= right do
+				local mid = _math_floor((left + right) / 2)
+				if self.listeners[mid].p < priority then
+					insertPos = mid
+					right = mid - 1
+				else
+					left = mid + 1
+				end
+			end
+
+			_table_insert(self.listeners, insertPos, { f = callback, p = priority })
+
+			self:_prune()
+			return self
+		end,
+
+		---Add a listener with simple insertion (full sort)
+		---@param self table
+		---@param callback function
+		---@param priority number Optional priority (default 0, higher executes first)
+		---@return table self
+		AddSimple = function(self, callback, priority)
+			priority = priority or 0
+
+			if _type(callback) ~= "function" then
+				_error("EventManager: callback must be a function for event '" .. self.name .. "'")
+			end
+
+			_table_insert(self.listeners, { f = callback, p = priority })
+
+			-- Sort all listeners by priority (higher first)
+			_table_sort(self.listeners, function(a, b)
+				return a.p > b.p
+			end)
+
+			self:_prune()
 			return self
 		end,
 
@@ -47,7 +97,7 @@ function EventManager.createEvent(name)
 		---@return table self
 		Remove = function(self, callback)
 			for i, listener in _ipairs(self.listeners) do
-				if listener == callback then
+				if listener.f == callback then
 					_table_remove(self.listeners, i)
 					break
 				end
@@ -65,10 +115,10 @@ function EventManager.createEvent(name)
 
 			self._executing = true
 
-			for _, callback in _ipairs(self.listeners) do
-				local success, err = _pcall(callback, ...)
+			for _, listener in _ipairs(self.listeners) do
+				local success, err = _pcall(listener.f, ...)
 				if not success then
-					print("ERROR in event '" .. self.name .. "': " .. _tostring(err))
+					_print("ERROR in event '" .. self.name .. "': " .. _tostring(err))
 				end
 			end
 
@@ -104,6 +154,40 @@ function EventManager.createEvent(name)
 		IsExecuting = function(self)
 			return self._executing
 		end,
+
+		---Set maximum listener count for this event (enables pruning)
+		---@param self table
+		---@param count number Maximum listeners allowed
+		---@return table self
+		SetMaxListeners = function(self, count)
+			self.maxListeners = count
+			self:_prune()
+			return self
+		end,
+
+		---Set custom pruning callback (called when a listener is removed due to maxListeners)
+		---@param self table
+		---@param callback function Called with (removed_listener_obj, event)
+		---@return table self
+		SetPruneCallback = function(self, callback)
+			self._pruneCallback = callback
+			return self
+		end,
+
+		---Internal: prune listeners if maxListeners exceeded
+		---@param self table
+		_prune = function(self)
+			if not self.maxListeners or #self.listeners <= self.maxListeners then
+				return
+			end
+
+			local removed = _table_remove(self.listeners, 1)
+
+			-- Call user callback if set
+			if self._pruneCallback then
+				self._pruneCallback(removed, self)
+			end
+		end,
 	}
 
 	EventManager.events[name] = event
@@ -133,9 +217,10 @@ end
 ---Get or create an event and add a listener (shorthand)
 ---@param eventName string Event name
 ---@param callback function Listener function
-function EventManager.on(eventName, callback)
+---@param priority number Optional priority (default 0, higher executes first)
+function EventManager.on(eventName, callback, priority)
 	local event = EventManager.getOrCreateEvent(eventName)
-	return event:Add(callback)
+	return event:Add(callback, priority)
 end
 
 ---Manually trigger an event
@@ -160,6 +245,14 @@ function EventManager.off(eventName, callback)
 	end
 end
 
+---Set maximum listener count for an event (shorthand)
+---@param eventName string Event name
+---@param count number Maximum listeners allowed
+function EventManager.setMaxListeners(eventName, count)
+	local event = EventManager.getOrCreateEvent(eventName)
+	return event:SetMaxListeners(count)
+end
+
 ---Get event info for debugging
 ---@param eventName string Event name
 ---@return table|nil
@@ -180,7 +273,7 @@ end
 ---@return table
 function EventManager.getAllEventsInfo()
 	local info = {}
-	for name, event in pairs(EventManager.events) do
+	for name, event in _pairs(EventManager.events) do
 		_table_insert(info, {
 			name = name,
 			enabled = event.enabled,

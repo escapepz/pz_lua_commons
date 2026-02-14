@@ -8,7 +8,7 @@ escape.SafeLogger.init("pz_utils")
 konijima_utilities = escape.SafeRequire("pz_utils/konijima/utilities", "konijima")
 
 local pz_utils = {
-	escape,
+	escape = escape,
 	konijima = {
 		Utilities = konijima_utilities,
 	},

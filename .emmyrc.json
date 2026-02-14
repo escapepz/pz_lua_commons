@@ -19,6 +19,7 @@
             "pz_lua_commons/common/media/lua/shared/pz_lua_commons/kikito",
             "pz_lua_commons/common/media/lua/shared/pz_lua_commons/rxi",
             "pz_lua_commons/common/media/lua/shared/pz_lua_commons/vrld",
+            "TEST_SUITE",
             "pz_lua_commons_example",
             "pz_lua_commons_test"
         ]
