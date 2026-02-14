@@ -181,7 +181,7 @@ function EventManager.createEvent(name)
 				return
 			end
 
-			local removed = _table_remove(self.listeners, 1)
+			local removed = _table_remove(self.listeners)
 
 			-- Call user callback if set
 			if self._pruneCallback then
