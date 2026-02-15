@@ -4,15 +4,22 @@
 --- Can respect vanilla HoursForLootRespawn with multiplier
 --- This module is the ONLY place SandboxVars is accessed for mods
 ---
---- Usage:
+--- MULTI-MOD SAFE: Uses explicit namespacing to avoid state collisions
+---
+--- Usage (Recommended - Factory Pattern):
+---   local MySandbox = SandboxVarsModule.Create("ModName", { key1 = defaultValue1, key2 = defaultValue2 })
+---   local value = MySandbox.Get("key1")
+---   local vanilla = MySandbox.GetVanilla("HoursForLootRespawn")
+---
+--- Usage (Direct - Explicit Namespace):
 ---   SandboxVarsModule.Init("ModName", { key1 = defaultValue1, key2 = defaultValue2 })
----   local value = SandboxVarsModule.Get("key1")
+---   local value = SandboxVarsModule.Get("ModName", "key1")
 ---   local vanilla = SandboxVarsModule.GetVanilla("HoursForLootRespawn")
 
 local SandboxVarsModule = {}
 
 -- Module metadata
-SandboxVarsModule.VERSION = "1.0.0"
+SandboxVarsModule.VERSION = "2.0.0"
 SandboxVarsModule.BUILD = "42+"
 
 -- Local cache of sandbox variables per module
@@ -20,9 +27,6 @@ local SandboxConfigs = {}
 
 -- Default values per module
 local DefaultsPerModule = {}
-
--- Currently active module namespace
-local CurrentNamespace = nil
 
 --- Validate that SandboxVars exists
 --- @return boolean True if valid
@@ -56,9 +60,6 @@ function SandboxVarsModule.Init(namespace, defaults)
 	-- Ensure sandbox namespace exists
 	SandboxVars[namespace] = SandboxVars[namespace] or {}
 
-	-- Set as current namespace
-	CurrentNamespace = namespace
-
 	-- Initialize storage for this namespace
 	SandboxConfigs[namespace] = {}
 	DefaultsPerModule[namespace] = {}
@@ -77,13 +78,14 @@ function SandboxVarsModule.Init(namespace, defaults)
 	return true
 end
 
---- Get a sandbox variable value with default fallback
+--- Get a sandbox variable value with explicit namespace (recommended)
+--- @param namespace string The mod namespace
 --- @param key string The variable name
 --- @param defaultValue any Optional override default value
 --- @return any The configuration value or default
-function SandboxVarsModule.Get(key, defaultValue)
-	if not CurrentNamespace then
-		error("SandboxVarsModule not initialized. Call Init() first.")
+function SandboxVarsModule.Get(namespace, key, defaultValue)
+	if not namespace or type(namespace) ~= "string" then
+		error("SandboxVarsModule.Get requires namespace string as first argument")
 		return nil
 	end
 
@@ -92,38 +94,8 @@ function SandboxVarsModule.Get(key, defaultValue)
 		return nil
 	end
 
-	local cfg = SandboxConfigs[CurrentNamespace]
-	---@diagnostic disable-next-line: unnecessary-if
-	if cfg and cfg[key] ~= nil then
-		return cfg[key]
-	end
-
-	if defaultValue ~= nil then
-		return defaultValue
-	end
-
-	local defaults = DefaultsPerModule[CurrentNamespace]
-	---@diagnostic disable-next-line: unnecessary-if
-	if defaults then
-		return defaults[key]
-	end
-
-	return nil
-end
-
---- Get a sandbox variable from a specific namespace
---- @param namespace string The mod namespace
---- @param key string The variable name
---- @param defaultValue any Optional override default value
---- @return any The configuration value or default
-function SandboxVarsModule.GetFromNamespace(namespace, key, defaultValue)
-	if not namespace or type(namespace) ~= "string" then
-		error("GetFromNamespace requires a valid namespace string")
-		return nil
-	end
-
 	if not SandboxConfigs[namespace] then
-		error("Namespace '" .. namespace .. "' not initialized")
+		error("Namespace '" .. namespace .. "' not initialized. Call Init() first.")
 		return nil
 	end
 
@@ -167,21 +139,14 @@ function SandboxVarsModule.GetVanilla(key, defaultValue)
 	return defaultValue
 end
 
---- Get the current active namespace
---- @return string|nil The current namespace or nil if not initialized
-function SandboxVarsModule.GetCurrentNamespace()
-	return CurrentNamespace
-end
-
 local EMPTY_TABLE = {} -- Allocated once at load time
 
 --- Get all configurations for a namespace
---- @param namespace string The mod namespace (optional, uses current if nil)
+--- @param namespace string The mod namespace
 --- @return table The configuration table
 function SandboxVarsModule.GetAll(namespace)
-	namespace = namespace or CurrentNamespace
-	if not namespace then
-		error("No namespace specified and none currently active")
+	if not namespace or type(namespace) ~= "string" then
+		error("GetAll requires a valid namespace string")
 		return EMPTY_TABLE
 	end
 
@@ -191,6 +156,39 @@ function SandboxVarsModule.GetAll(namespace)
 	end
 
 	return SandboxConfigs[namespace]
+end
+
+--- Factory pattern: Create a bound namespace accessor (RECOMMENDED)
+--- Returns a table with ergonomic Get/GetAll/GetVanilla that are pre-bound to namespace
+--- @param namespace string The mod namespace
+--- @param defaults table Default values for the configuration
+--- @return table Accessor table with Get(key), GetAll(), GetVanilla(key) methods
+function SandboxVarsModule.Create(namespace, defaults)
+	-- Initialize the namespace first
+	SandboxVarsModule.Init(namespace, defaults)
+
+	-- Return a bound accessor
+	return {
+		--- Get value from this namespace (no namespace parameter needed)
+		Get = function(key, defaultValue)
+			return SandboxVarsModule.Get(namespace, key, defaultValue)
+		end,
+
+		--- Get all values from this namespace
+		GetAll = function()
+			return SandboxVarsModule.GetAll(namespace)
+		end,
+
+		--- Get vanilla SandboxVars value (same for all namespaces)
+		GetVanilla = function(key, defaultValue)
+			return SandboxVarsModule.GetVanilla(key, defaultValue)
+		end,
+
+		--- Get the namespace this accessor is bound to
+		GetNamespace = function()
+			return namespace
+		end,
+	}
 end
 
 return SandboxVarsModule
