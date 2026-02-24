@@ -1,9 +1,10 @@
 {
     "$schema": "https://raw.githubusercontent.com/escapepz/project-zomboid-studio/refs/heads/b42.13.1/pzstudio.schema.json",
     "title": "PZ Lua Commons",
-    "authors": [],
+    "authors": ["escapepz"],
     "workshop": {
-        "visibility": "unlisted",
+        "id": 3672788969,
+        "visibility": "public",
         "tags": ["Build 42", "Framework", "WIP"],
         "excludes": ["pz_lua_commons_test", "pz_lua_commons_example"]
     },

@@ -1,4 +1,10 @@
+author=escapepz
+
 id=pz_lua_commons
 name=PZ Lua Commons
+
 poster=poster.png
 icon=icon.png
+
+modversion=1.0.1
+versionMin=42.13.1
