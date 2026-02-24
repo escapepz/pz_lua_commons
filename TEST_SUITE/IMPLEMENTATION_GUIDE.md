@@ -146,88 +146,7 @@ Demonstrates real-world patterns:
 
 ## Implementation Steps
 
-### Step 1: Create Mock/Stub Layer
-
-Create `tests/mock_pz.lua`:
-
-```lua
--- mock_pz.lua
--- Minimal stubs for PZ APIs used in testing
-
-local mock_pz = {}
-
--- ArrayList stub
-local ArrayList = {}
-ArrayList.__index = ArrayList
-
-function ArrayList.new()
-    return setmetatable({
-        _items = {}
-    }, ArrayList)
-end
-
-function ArrayList:add(item)
-    table.insert(self._items, item)
-    return true
-end
-
-function ArrayList:get(index)
-    return self._items[index]
-end
-
-function ArrayList:size()
-    return #self._items
-end
-
-function ArrayList:remove(index)
-    local item = self._items[index]
-    table.remove(self._items, index)
-    return item
-end
-
-function ArrayList:toArray()
-    return self._items
-end
-
-mock_pz.ArrayList = ArrayList
-
--- Vector2f stub
-local Vector2f = {}
-Vector2f.__index = Vector2f
-
-function Vector2f.new(x, y)
-    return setmetatable({
-        x = x or 0,
-        y = y or 0
-    }, Vector2f)
-end
-
-function Vector2f:distance(other)
-    local dx = self.x - other.x
-    local dy = self.y - other.y
-    return math.sqrt(dx * dx + dy * dy)
-end
-
-mock_pz.Vector2f = Vector2f
-
--- Setup global environment for test access
-function mock_pz.setupGlobalEnvironment()
-    _G.ArrayList = ArrayList
-    _G.Vector2f = Vector2f
-    -- Add other stubs as needed
-end
-
-return mock_pz
-```
-
-**Key Points**:
-
-- Implement ONLY methods used by your code
-- Match method signatures exactly
-- Use Lua tables (not Java objects)
-- Provide `setupGlobalEnvironment()` to inject globals
-
-### Step 2: Create Test Framework
+### Step 1: Create Test Framework
 
 Create a simple test runner in `tests/test_framework.lua`:
 
@@ -326,6 +245,15 @@ end
 
 return TestRunner
 ```
+
+### Step 2: Create Mock/Stub Layer
+
+Create `tests/mock_pz.lua` with minimal implementations of PZ APIs. Refer to the Architecture section above for examples of ArrayList and Vector2f stubs. Key points:
+
+- Implement ONLY methods used by your code
+- Match method signatures exactly
+- Use Lua tables (not Java objects)
+- Provide `setupGlobalEnvironment()` to inject globals
 
 ### Step 3: Create Test Suite
 
@@ -511,6 +439,529 @@ end
 -- Normal mod code continues...
 local pz_commons = require("pz_lua_commons/shared")
 ```
+
+---
+
+## Lua 5.1 Runtime Setup
+
+### Lua 5.1 vs LuaJIT - Which Should I Use?
+
+**Short Answer**: **Use Lua 5.1, NOT LuaJIT**
+
+#### Key Differences
+
+| Aspect | Lua 5.1 | LuaJIT |
+|--------|---------|--------|
+| **Kahlua2 Compatibility** | ✓ 100% | ✗ Limited |
+| **Project Zomboid Support** | ✓ Yes (native) | ✗ No |
+| **Syntax** | Lua 5.1 standard | Lua 5.1 + extensions |
+| **Speed** | Standard | 10-40x faster (JIT) |
+| **Use Case** | **Testing PZ mods** | Game dev, performance |
+
+#### Why Lua 5.1 for Kahlua2?
+
+**Kahlua2** is a Java-based Lua Virtual Machine that **implements exactly Lua 5.1 semantics**.
+
+```
+Your mod code → Kahlua2 (Java VM) → Runs Lua 5.1 code
+Your tests   → Lua 5.1 interpreter → Emulates Kahlua2 behavior
+```
+
+**LuaJIT incompatibilities with Kahlua2/PZ:**
+
+1. **FFI (Foreign Function Interface)**: Not available in Kahlua2
+   ```lua
+   -- LuaJIT only - will FAIL in PZ
+   local ffi = require("ffi")  -- Not supported by Kahlua2
+   ```
+
+2. **JIT-specific optimizations**: Won't apply in Kahlua2
+   ```lua
+   -- LuaJIT might optimize, but Kahlua2 doesn't
+   for i = 1, 1000000 do ... end
+   ```
+
+3. **Different standard library**: Some modules differ
+   ```lua
+   -- Different behavior between LuaJIT and Kahlua2
+   string.format behavior
+   table.sort stability
+   math operations
+   ```
+
+4. **Bytecode incompatibility**: Can't mix bytecode
+   ```lua
+   -- Compiled with LuaJIT → Won't load in Kahlua2
+   -- Compiled with Lua 5.1 → Will load in Kahlua2
+   ```
+
+#### When Testing, You Need Lua 5.1 Because:
+
+1. **Exact behavior match**: Tests pass locally → will pass in PZ
+2. **Same stdlib**: No surprises when code runs in-game
+3. **Kahlua2 compliance**: Your mocks are validated against correct VM
+4. **Sandbox limitations**: Test with same restrictions as PZ
+
+#### Example: Why This Matters
+
+```lua
+-- test.lua
+local val = 0.1 + 0.2
+print(val == 0.3)  -- Different in LuaJIT vs Lua 5.1 vs Kahlua2
+
+-- In Lua 5.1:
+-- false (floating point precision)
+
+-- In LuaJIT:
+-- might be true (JIT optimizations)
+
+-- In Kahlua2:
+-- false (matches Lua 5.1)
+
+-- Your test MUST use Lua 5.1 to match PZ behavior
+```
+
+#### Decision Tree
+
+```
+Do you need to test code for Project Zomboid?
+├─ YES → Use Lua 5.1 ✓
+└─ NO
+   ├─ Need maximum performance? → Use LuaJIT
+   ├─ Need standard Lua? → Use Lua 5.4+
+   └─ Need exact PZ compatibility? → Use Lua 5.1 ✓
+```
+
+#### Summary
+
+- **For PZ mod testing**: Lua 5.1 (this guide)
+- **For general Lua dev**: Lua 5.4 or LuaJIT
+- **For this project**: **Lua 5.1 only**
+
+---
+
+### Installation by Platform
+
+Project Zomboid uses Lua 5.1 via Kahlua2, so your test environment should match.
+
+#### Windows
+
+**Option 1: Pre-built Binary (Recommended)**
+
+1. Download from https://github.com/rjpcomputing/luaforwindows
+   - Get the latest `lua-5.1.x` release
+   - Extract to `C:\lua` or `C:\tools\lua`
+
+2. Verify installation:
+   ```cmd
+   lua -v
+   ```
+   Should output: `Lua 5.1.x -- Copyright...`
+
+3. Add to PATH:
+   - Press `Win + X` → System
+   - Click "Environment variables"
+   - Click "Path" → Edit
+   - Click "New" → Add `C:\lua\bin` (or your install path)
+   - Restart terminal/VSCode
+
+**Option 2: Compile from Source**
+
+1. Install MinGW or Visual Studio Build Tools
+2. Download source: https://www.lua.org/download.html
+3. Extract and open Developer Command Prompt:
+   ```cmd
+   cd lua-5.1.5
+   mingw32-make
+   ```
+
+**Option 3: Package Manager**
+
+```powershell
+# Using Scoop
+scoop install lua51
+
+# Using Chocolatey
+choco install lua51
+```
+
+#### macOS
+
+```bash
+# Using Homebrew
+brew install lua@5.1
+
+# Verify
+lua5.1 -v
+
+# Link to 'lua' command (optional)
+ln -s /usr/local/bin/lua5.1 /usr/local/bin/lua
+```
+
+#### Linux (Ubuntu/Debian)
+
+```bash
+# Install Lua 5.1
+sudo apt-get install lua5.1
+
+# Verify
+lua5.1 -v
+
+# Link to 'lua' command (optional)
+sudo update-alternatives --install /usr/bin/lua lua /usr/bin/lua5.1 1
+```
+
+#### Linux (Fedora/RHEL)
+
+```bash
+# Install
+sudo dnf install lua
+
+# Verify version
+lua -v
+```
+
+### Verify Installation
+
+Test your Lua 5.1 installation:
+
+```bash
+# Check version
+lua -v
+# Output: Lua 5.1.5  Copyright (c) 1994-2012 Lua.org, PUC-Rio
+
+# Check interactive mode
+lua
+```
+
+In interactive mode:
+
+```lua
+Lua 5.1.5  Copyright (c) 1994-2012 Lua.org, PUC-Rio
+> print("Hello from Lua 5.1")
+Hello from Lua 5.1
+> = 2 + 2
+4
+> os.exit()
+```
+
+### Configure PATH
+
+Ensure `lua` command is globally accessible:
+
+**Windows (PowerShell)**:
+
+```powershell
+# Check current PATH
+$env:Path -split ';'
+
+# Test lua is available
+lua -v
+
+# If not found, add to PATH:
+$luaPath = "C:\lua\bin"  # Adjust to your path
+[System.Environment]::SetEnvironmentVariable("Path", "$env:Path;$luaPath", "Machine")
+# Restart PowerShell
+```
+
+**Windows (Command Prompt)**:
+
+```cmd
+:: Check PATH
+echo %PATH%
+
+:: Test lua
+lua -v
+
+:: If not found, use Windows GUI:
+:: Settings > Environment Variables > Edit PATH > Add C:\lua\bin
+```
+
+**macOS/Linux**:
+
+```bash
+# Check if lua is in PATH
+which lua
+
+# Or check lua5.1
+which lua5.1
+
+# Test it works
+lua -v
+```
+
+### VSCode Integration
+
+Configure VSCode to find your Lua runtime:
+
+**1. Update launch.json**
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug All Tests",
+            "type": "lua",
+            "request": "launch",
+            "program": "${workspaceFolder}/TEST_SUITE/tests/test_common_lib.lua",
+            "cwd": "${workspaceFolder}/TEST_SUITE/tests",
+            "stopOnEntry": false,
+            "luaVersion": "5.1",
+            "luaPath": "lua"  // or full path like "C:\\lua\\bin\\lua.exe"
+        }
+    ]
+}
+```
+
+**2. Update settings.json**
+
+```json
+{
+    "Lua.runtime.version": "Lua 5.1",
+    "Lua.runtime.path": [
+        "?.lua",
+        "?/init.lua",
+        "lua/?.lua",
+        "lua/?/init.lua"
+    ],
+    "Lua.diagnostics.globals": [
+        "require",
+        "module",
+        "_G",
+        "GetTickCount",
+        "GetCurrentTimeMs",
+        "ArrayList",
+        "HashMap",
+        "Vector2f",
+        "Vector3f"
+    ]
+}
+```
+
+**3. Configure Debugger Extension**
+
+Install **Lua Debug** extension (actboy168):
+
+1. Open Extensions (`Ctrl+Shift+X`)
+2. Search "lua-debug" or "actboy168"
+3. Install and reload VSCode
+
+### Test the Setup
+
+Create a test file `verify_lua.lua`:
+
+```lua
+-- verify_lua.lua
+-- Verify Lua 5.1 installation and test framework
+
+print("=== Lua 5.1 Verification ===")
+print("Lua version: " .. _VERSION)
+print("Lua path: " .. package.path)
+print()
+
+-- Check Lua version is 5.1
+local major, minor = _VERSION:match("Lua (%d+)%.(%d+)")
+assert(major == "5" and minor == "1", "Must be Lua 5.1")
+print("✓ Lua version is 5.1")
+
+-- Test basic features
+local function test_basics()
+    local t = {1, 2, 3}
+    assert(#t == 3, "Table length should work")
+    
+    local function greet(name)
+        return "Hello, " .. name
+    end
+    assert(greet("World") == "Hello, World", "Functions should work")
+    
+    print("✓ Basic Lua features work")
+end
+
+test_basics()
+
+-- Test module loading
+local function test_modules()
+    -- Test that table library works
+    assert(table.insert, "table.insert should exist")
+    assert(table.remove, "table.remove should exist")
+    print("✓ Standard library modules work")
+end
+
+test_modules()
+
+-- Test string functions
+local function test_strings()
+    assert(string.sub("hello", 1, 2) == "he", "string.sub should work")
+    assert(string.format("%d", 42) == "42", "string.format should work")
+    print("✓ String functions work")
+end
+
+test_strings()
+
+-- Test math functions
+local function test_math()
+    assert(math.sqrt(4) == 2, "math.sqrt should work")
+    assert(math.floor(3.7) == 3, "math.floor should work")
+    print("✓ Math functions work")
+end
+
+test_math()
+
+print()
+print("=== All verifications passed ===")
+print("Your Lua 5.1 environment is ready for testing!")
+```
+
+Run verification:
+
+```bash
+cd TEST_SUITE
+lua verify_lua.lua
+```
+
+Expected output:
+
+```
+=== Lua 5.1 Verification ===
+Lua version: Lua 5.1.5
+Lua path: ?.lua;?/init.lua;...
+
+✓ Lua version is 5.1
+✓ Basic Lua features work
+✓ Standard library modules work
+✓ String functions work
+✓ Math functions work
+
+=== All verifications passed ===
+Your Lua 5.1 environment is ready for testing!
+```
+
+### Test with Framework
+
+Verify test framework works with your Lua:
+
+```bash
+cd TEST_SUITE/tests
+lua test_common_lib.lua
+```
+
+Should see:
+
+```
+======================================================================
+TEST SUITE
+======================================================================
+
+Module loading: pz_lua_commons exists              OK
+Module loading: pz_utils exists                   OK
+...
+```
+
+### Environment Variables
+
+Set up environment variables for convenience:
+
+**Windows (PowerShell)**:
+
+```powershell
+# Add to PowerShell profile
+$PROFILE
+
+# Edit file, add:
+$env:LUA_PATH = "C:\lua\bin"
+$env:LUA_HOME = "C:\lua"
+
+# Verify
+$env:LUA_PATH
+```
+
+**macOS/Linux**:
+
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+export LUA_HOME=/usr/local/opt/lua@5.1
+export LUA_BIN=$LUA_HOME/bin
+export PATH=$LUA_BIN:$PATH
+
+# Reload shell
+source ~/.bashrc
+# or
+source ~/.zshrc
+
+# Verify
+echo $LUA_PATH
+```
+
+### Troubleshooting
+
+**Problem: "lua command not found"**
+
+Solution:
+
+```bash
+# Find where lua is installed
+which lua
+which lua5.1
+
+# If found, add to PATH (see platform-specific steps above)
+
+# If not found, reinstall:
+# Windows: Download from luaforwindows.com
+# macOS: brew install lua@5.1
+# Linux: apt-get install lua5.1
+```
+
+**Problem: "Wrong Lua version (have X.X, need 5.1)"**
+
+Solution:
+
+```bash
+# Check installed version
+lua -v
+
+# You may have multiple versions installed
+which lua51
+
+# Create symlink or alias
+# Windows: mklink lua.exe lua51.exe
+# macOS/Linux: ln -s /usr/bin/lua5.1 /usr/bin/lua
+```
+
+**Problem: "Lua works but VSCode debugger doesn't"**
+
+Solution:
+
+1. Install Lua Debug extension: https://marketplace.visualstudio.com/items?itemName=actboy168.lua-debug
+2. Update `.vscode/launch.json` with correct path:
+   ```json
+   "luaPath": "C:\\lua\\bin\\lua.exe"  // Windows (use full path)
+   "luaPath": "/usr/local/bin/lua"      // macOS
+   "luaPath": "/usr/bin/lua5.1"         // Linux
+   ```
+
+**Problem: "Tests fail with module not found"**
+
+Solution:
+
+1. Verify package.path includes test directories:
+   ```bash
+   lua -e "print(package.path)"
+   ```
+
+2. Update paths in test file:
+   ```lua
+   local testDir = debug.getinfo(1).source:match("@?(.*/)")
+   package.path = testDir .. "?.lua;" 
+                .. testDir .. "../../pz_lua_commons/common/media/lua/shared/?.lua;"
+                .. package.path
+   ```
+
+3. Test module loading:
+   ```bash
+   cd TEST_SUITE/tests
+   lua -e "require('mock_pz')" && echo "Success"
+   ```
 
 ---
 
@@ -763,23 +1214,150 @@ Add to `.vscode/keybindings.json`:
 
 ### 6. settings.json for Lua
 
-Configure `.vscode/settings.json`:
+Configure `.vscode/settings.json` to ensure Lua 5.1 is used for IntelliSense and debugging:
 
 ```json
 {
     "Lua.runtime.version": "Lua 5.1",
-    "Lua.diagnostics.globals": ["require", "module", "_G"],
+    "lua.debug.settings.luaVersion": "lua51",
+    "Lua.diagnostics.globals": [
+        "require",
+        "module",
+        "_G",
+        "GetTickCount",
+        "GetCurrentTimeMs",
+        "ArrayList",
+        "HashMap",
+        "Vector2f",
+        "Vector3f",
+        "Character",
+        "Item",
+        "GameState"
+    ],
     "Lua.workspace.library": [
-        "${workspaceFolder}/pz_lua_commons/common/media/lua/shared"
+        "${workspaceFolder}/pz_lua_commons/common/media/lua/shared",
+        "${workspaceFolder}/TEST_SUITE/tests"
     ],
     "Lua.workspace.ignoreDir": [
         ".git",
         ".vscode",
-        "node_modules"
+        "node_modules",
+        ".tmp"
     ],
     "editor.formatOnSave": true,
     "files.trimFinalNewlines": true,
     "files.trimTrailingWhitespace": true
+}
+```
+
+**Key Settings Explained**:
+
+| Setting | Purpose |
+|---------|---------|
+| `"Lua.runtime.version": "Lua 5.1"` | IntelliSense uses Lua 5.1 stdlib |
+| `"lua.debug.settings.luaVersion": "lua51"` | **Debugger uses Lua 5.1** (critical for Kahlua2) |
+| `"Lua.diagnostics.globals"` | Custom PZ API globals (no "undefined" warnings) |
+| `"Lua.workspace.library"` | Where to find library files for completion |
+| `"Lua.workspace.ignoreDir"` | Don't scan these directories |
+
+**Why These Settings Matter**:
+
+1. **`lua.debug.settings.luaVersion`** ensures the debugger matches your installed Lua 5.1
+2. **`Lua.runtime.version`** ensures IntelliSense suggests only Lua 5.1 features
+3. **`Lua.diagnostics.globals`** prevents false warnings about PZ APIs like `ArrayList`, `Character`, etc.
+4. **`Lua.workspace.library`** enables autocomplete for your commons libraries
+
+**Complete Example with Kahlua2 PZ APIs**:
+
+```json
+{
+    "Lua.runtime.version": "Lua 5.1",
+    "lua.debug.settings.luaVersion": "lua51",
+    "Lua.diagnostics.globals": [
+        "require",
+        "module",
+        "_G",
+        
+        // Kahlua2/PZ APIs
+        "GetTickCount",
+        "GetCurrentTimeMs",
+        "ArrayList",
+        "HashMap",
+        "Vector2f",
+        "Vector3f",
+        "Character",
+        "Item",
+        "GameState",
+        "Registry",
+        "Coroutine",
+        
+        // Commons libraries
+        "pz_commons",
+        "pz_utils",
+        "middleclass",
+        "lunajson",
+        "signal",
+        "SafeLogger",
+        "Debounce",
+        "EventManager"
+    ],
+    "Lua.workspace.library": [
+        "${workspaceFolder}/pz_lua_commons/common/media/lua/shared",
+        "${workspaceFolder}/TEST_SUITE/tests"
+    ],
+    "Lua.workspace.ignoreDir": [
+        ".git",
+        ".vscode",
+        "node_modules",
+        ".tmp",
+        "workshop"
+    ],
+    "Lua.format.enable": false,
+    "editor.formatOnSave": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "[lua]": {
+        "editor.defaultFormatter": "sumneko.lua",
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true
+    }
+}
+```
+
+**Verify Your Setup**:
+
+After updating `settings.json`:
+
+1. Reload VSCode: `Ctrl+Shift+P` → "Developer: Reload Window"
+2. Open a test file: `TEST_SUITE/tests/test_common_lib.lua`
+3. Hover over `ArrayList` or other PZ globals
+   - Should show no "undefined" warnings
+   - IntelliSense should work
+4. Press `F5` to debug
+   - Debugger should start without errors
+   - Should use your installed Lua 5.1
+
+**Troubleshooting settings.json**:
+
+**Problem**: "lua.debug.settings.luaVersion not recognized"
+
+**Solution**: Make sure you have the **Lua Debug** extension installed:
+```bash
+# From VSCode Extensions (Ctrl+Shift+X), search and install:
+# "Lua Debug" by actboy168
+```
+
+**Problem**: IntelliSense shows "undefined global" for ArrayList, HashMap, etc.
+
+**Solution**: Add to `Lua.diagnostics.globals` in settings.json (shown above)
+
+**Problem**: Debugger says "wrong Lua version"
+
+**Solution**: Specify full path in `launch.json`:
+```json
+{
+    "luaPath": "C:\\lua\\bin\\lua.exe",  // Windows
+    "luaVersion": "5.1"
 }
 ```
 
@@ -1480,17 +2058,13 @@ local pz_commons = require("pz_lua_commons/shared")
 
 ### Problem: Tests pass locally but fail in PZ
 
-**Cause**: Using non-stub APIs or Kahlua2-incompatible features
+**Cause**: Using non-stub APIs or Kahlua2-incompatible features (see "Kahlua2 Limitations" in Core Concepts)
 
 **Solution**:
 
 1. Check `TEST_ARCHITECTURE.md` for stub contract rules
 2. Verify method exists in actual PZ stub documentation
-3. Avoid:
-   - `io` library (file operations)
-   - `debug` library
-   - `os` library
-   - Luajit-specific features
+3. Avoid unsupported features listed in Core Concepts
 4. Add test case for the failing pattern
 
 ### Problem: Mock behavior differs from PZ
@@ -1515,52 +2089,24 @@ local pz_commons = require("pz_lua_commons/shared")
 local ArrayList = {}
 ```
 
-### Problem: Kahlua2 doesn't support feature
-
-**Cause**: Using Lua feature not available in Kahlua2
-
-**Examples**:
-
-- ✗ `io.open()` - Kahlua2 blocks I/O
-- ✗ `os.exit()` - Not available
-- ✗ `debug.getlocal()` - No debug library
-- ✓ `table.insert()` - Standard library OK
-- ✓ `string.sub()` - String library OK
-- ✓ `math.sqrt()` - Math library OK
-
-**Solution**: Use only stdlib that Kahlua2 provides
-
 ---
 
-## Summary
+## Getting Started
 
 ### Quick Implementation Checklist
 
-- [ ] Create `mock_pz.lua` with stub implementations
-- [ ] Create `test_framework.lua` with assertion helpers
-- [ ] Create `test_*.lua` files with organized tests
-- [ ] Implement `TestRunner.register()` to add tests
-- [ ] Use `TestRunner.run()` to execute all tests
-- [ ] Run: `cd TEST_SUITE/tests && lua test_common_lib.lua`
-- [ ] Verify: All tests pass (0 failures)
-- [ ] Add more tests as you add features
-
-### Key Principles
-
-1. **Mock Only What's Needed**: Minimal implementations save maintenance
-2. **Match Stub Contracts**: Your mocks must follow real API signatures
-3. **Test Real Libraries**: Load actual pz_lua_commons, not copies
-4. **No Invented APIs**: Only use stubs and Lua standard library
-5. **Clear Test Names**: `{Category}: {Feature} {Behavior}`
-6. **One Focus Per Test**: Each test validates one thing
-7. **Consistent Organization**: Group tests by category
-8. **Good Error Messages**: Describe what should happen
+1. Create `mock_pz.lua` with stub implementations
+2. Create `test_framework.lua` with assertion helpers
+3. Create `test_*.lua` files with organized tests using `TestRunner.register()`
+4. Run: `cd TEST_SUITE/tests && lua test_common_lib.lua`
+5. Verify all tests pass (0 failures)
+6. Add more tests as you add features
 
 ### Next Steps
 
 1. Copy `TEST_SUITE/tests/mock_pz.lua` as base
 2. Adapt mocks for your specific mod APIs
-3. Create test file following patterns shown
+3. Create test file following patterns in Testing Patterns section
 4. Add tests incrementally as you develop
 5. Run before committing code
 6. Update mocks when PZ stub changes
