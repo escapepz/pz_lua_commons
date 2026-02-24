@@ -46,7 +46,7 @@ local ZUL = nil
 -- 5. INITIALIZE LOGGER
 local function initializeLogger()
 	if not hasZUL then
-		hasZUL, ZUL = pcall(require, "ZUL")
+		hasZUL, ZUL = pcall(require, "zul")
 	end
 
 	if hasZUL and type(ZUL) == "table" and type(ZUL.new) == "function" then
