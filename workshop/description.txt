@@ -1,3 +1,33 @@
-[h1]project-name[/h1]
+[h1]PZ Lua Commons[/h1]
 
-Mod under development...
+A curated collection of Lua libraries maintained for Project Zomboid, with proper credits to original authors. Includes pz_utils (built specifically for PZ) and established Lua libraries adapted to work seamlessly with the game.
+
+• Centralized shared code reduces conflicts between mods
+• Includes common tools, libraries, and utilities
+• Improves mod stability and compatibility
+• Streamlines mod development
+• Lightweight with zero gameplay impact
+
+Essential for mods that depend on this framework.
+
+[h2]Shared Libraries (Client & Server)[/h2]
+
+• grafi-tt/lunajson 1.2.3 - JSON parsing
+• rxi/json.lua v0.1.2 - JSON utilities
+• kikito/middleclass v4.1.1 - OOP library
+• vrld/hump.signal - Event signaling system
+
+[h2]Client Libraries[/h2]
+
+• yonaba/30log 1.3.0 - Lightweight OOP library
+• pkulchenko/serpent 0.30 - Table serialization
+• kikito/inspect.lua v3.1.3 - Debugging and introspection
+
+[h2]pz_utils[/h2]
+• escape:
+- debouncing
+- Event management
+- safe require
+- safe logging
+- sandbox variables
+• konijima: General utility functions
