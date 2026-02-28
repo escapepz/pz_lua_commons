@@ -15,5 +15,5 @@ local pz_utils = {
 	},
 }
 
-safe_logger.log("Shared Loaded", 20)
+safe_logger:log("Shared Loaded", 20)
 return pz_utils

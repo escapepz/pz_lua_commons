@@ -43,7 +43,7 @@ local SafeLogger = {}
 
 -- Create a new logger instance
 ---@param moduleName string
----@param threshold integer|nil
+---@param threshold integer
 ---@return ESC_SafeLogger_Instance
 function SafeLogger.new(moduleName, threshold)
 	local instance = {
