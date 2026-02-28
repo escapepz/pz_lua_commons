@@ -1,8 +1,9 @@
 local inspectlua, serpent, yon_30log
 
 local safe_require = require("pz_utils/escape/safe_require")
-local safe_logger = require("pz_utils/escape/safe_logger")
-safe_logger.init("pz_lua_commons")
+local SafeLogger = require("pz_utils/escape/safe_logger")
+
+local safe_logger = SafeLogger.new("pz_lua_commons")
 
 -- Strictly client-side only.
 if not isServer() then
@@ -23,5 +24,5 @@ local pz_lua_commons = {
 	},
 }
 
-safe_logger.log("Client Loaded", 20)
+safe_logger:log("Client Loaded", 20)
 return pz_lua_commons

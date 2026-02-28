@@ -11,7 +11,7 @@
     "mods": {
         "pz_lua_commons": {
             "name": "PZ Lua Commons",
-            "description": ""
+            "description": "A curated collection of Lua libraries maintained for Project Zomboid."
         },
         "pz_lua_commons_test": {
             "name": "pz_lua_commons_test",

@@ -3,7 +3,8 @@ local konijima_utilities
 
 local escape = require("pz_utils/escape/index")
 
-escape.SafeLogger.init("pz_utils")
+local SafeLogger = escape.SafeLogger
+local safe_logger = SafeLogger.new("pz_utils")
 
 konijima_utilities = escape.SafeRequire("pz_utils/konijima/utilities", "konijima")
 
@@ -14,5 +15,5 @@ local pz_utils = {
 	},
 }
 
-escape.SafeLogger.log("Shared Loaded", 20)
+safe_logger.log("Shared Loaded", 20)
 return pz_utils

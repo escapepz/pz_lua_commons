@@ -2,12 +2,11 @@
 -- https://github.com/escapepz
 -- MyDefensiveMod.lua aka safe_logger.lua
 
--- 1. LOCALIZING GLOBALS: Cache these once at load time.
--- This converts global table lookups into fast register access.
+-- LOCALIZING GLOBALS
 local pcall, pairs, type, tostring, tonumber, print = pcall, pairs, type, tostring, tonumber, print
 local string_upper = string.upper
 
--- 2. CONFIGURATION & CONSTANTS
+-- CONSTANTS
 local LOG_LEVELS = {
 	TRACE = 10,
 	DEBUG = 20,
@@ -26,92 +25,94 @@ local LOG_LEVEL_METHODS = {
 	[60] = "fatal",
 }
 
-local CURRENT_THRESHOLD = LOG_LEVELS.INFO -- Only log INFO and above
-
--- 3. OPTIMIZATION: Reverse Lookup Table
--- This replaces your 'for name, value in pairs' loop with a direct index lookup.
+-- Reverse Lookup Table
 local LEVEL_NAMES = {}
 for name, val in pairs(LOG_LEVELS) do
 	LEVEL_NAMES[val] = name
 end
 
--- 4. MODULE STATE
+-- MODULE INTERFACE
 ---@class ESC_SafeLogger
 local SafeLogger = {}
-local LOG_MODULE_NAME = "yourmodulename" -- Can be changed via init()
-local logger = nil
-local hasZUL = false
-local ZUL = nil
 
--- 5. INITIALIZE LOGGER
-local function initializeLogger()
-	if not hasZUL then
-		hasZUL, ZUL = pcall(require, "zul")
-	end
+---@class ESC_SafeLogger_Instance
+---@field moduleName string
+---@field threshold integer
+---@field logger function|nil
+---@field log function
 
+-- Create a new logger instance
+---@param moduleName string
+---@param threshold integer|nil
+---@return ESC_SafeLogger_Instance
+function SafeLogger.new(moduleName, threshold)
+	local instance = {
+		moduleName = moduleName or "default",
+		threshold = threshold or LOG_LEVELS.INFO,
+		logger = nil,
+	}
+
+	-- Initialize ZUL if available
+	local hasZUL, ZUL = pcall(require, "zul")
 	if hasZUL and type(ZUL) == "table" and type(ZUL.new) == "function" then
-		local ok, result = pcall(ZUL.new, LOG_MODULE_NAME)
+		local ok, result = pcall(ZUL.new, instance.moduleName)
 		if ok and result then
-			logger = result
-			-- Use pcall directly with the function and arguments to avoid closure creation
-			pcall(logger.info, logger, "ZUL detected and enabled")
+			instance.logger = result
+			pcall(instance.logger.debug, instance.logger, "ZUL detected and enabled")
 		end
-	else
-		print("[" .. LOG_MODULE_NAME .. "] [safe_logger.lua] ZUL not found; use ZUL for better log level control.")
-	end
-end
-
--- 6. THE OPTIMIZED HOTPATH FUNCTION
-local function safeLog(msg, logLevel)
-	-- 1. PRELIMINARY NUMERIC RESOLUTION
-	-- If logLevel is already a number (best for performance), we check it immediately.
-	local numericLevel = tonumber(logLevel)
-
-	-- 2. STRING RESOLUTION (Only if not a number)
-	if not numericLevel and type(logLevel) == "string" then
-		numericLevel = LOG_LEVELS[string_upper(logLevel)]
 	end
 
-	-- Fallback to INFO (30) if still nil
-	numericLevel = numericLevel or 30
+	-- Log method for this instance
+	function instance:log(msg, level)
+		local numericLevel = tonumber(level)
+		if not numericLevel and type(level) == "string" then
+			numericLevel = LOG_LEVELS[string_upper(level)]
+		end
+		numericLevel = numericLevel or LOG_LEVELS.INFO
 
-	-- 4. HEAVY LIFTING: Only happens if we are actually logging
-	local l_logger = logger
-	if not l_logger then
-		-- THE GATE: Exit before doing ANY string concatenation or logger lookups
-		if numericLevel < CURRENT_THRESHOLD then
+		if numericLevel < self.threshold then
 			return
 		end
 
-		-- We only reach this string concat if we are actually printing to console
-		local levelName = LEVEL_NAMES[numericLevel] or "INFO"
-		print("[" .. LOG_MODULE_NAME .. "] [" .. levelName .. "] " .. tostring(msg))
-		return
+		---@diagnostic disable-next-line: unnecessary-if
+		if self.logger then
+			local methodName = LOG_LEVEL_METHODS[numericLevel] or "info"
+			local method = self.logger[methodName]
+			if method then
+				pcall(method, self.logger, msg)
+			end
+		else
+			local levelName = LEVEL_NAMES[numericLevel] or "INFO"
+			print("[" .. self.moduleName .. "] [" .. levelName .. "] " .. tostring(msg))
+		end
 	end
 
-	local methodName = LOG_LEVEL_METHODS[numericLevel] or "info"
-	local method = l_logger[methodName]
-
-	if method then
-		pcall(method, l_logger, msg)
+	-- Convenience methods
+	function instance:trace(msg)
+		self:log(msg, LOG_LEVELS.TRACE)
 	end
-end
 
---- Initialize SafeLogger with a module name
----@param moduleName string|nil
-function SafeLogger.init(moduleName)
-	LOG_MODULE_NAME = moduleName or LOG_MODULE_NAME
-	initializeLogger()
-end
+	function instance:debug(msg)
+		self:log(msg, LOG_LEVELS.DEBUG)
+	end
 
---- Log a message with optional level
----@param msg any
----@param level string|number|nil TRACE = 10 | DEBUG = 20 | INFO = 30 | WARN = 40 | ERROR = 50 | FATAL = 60
-function SafeLogger.log(msg, level)
-	safeLog(msg, level)
-end
+	function instance:info(msg)
+		self:log(msg, LOG_LEVELS.INFO)
+	end
 
--- Initialize on require
--- initializeLogger()
+	function instance:warn(msg)
+		self:log(msg, LOG_LEVELS.WARN)
+	end
+
+	function instance:error(msg)
+		self:log(msg, LOG_LEVELS.ERROR)
+	end
+
+	function instance:fatal(msg)
+		self:log(msg, LOG_LEVELS.FATAL)
+	end
+
+	return instance
+end
 
 return SafeLogger

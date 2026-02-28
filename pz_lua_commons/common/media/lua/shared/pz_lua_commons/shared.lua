@@ -1,8 +1,8 @@
 local lunajson, middleclass, jsonlua, hump_signal
 
 local safe_require = require("pz_utils/escape/safe_require")
-local safe_logger = require("pz_utils/escape/safe_logger")
-safe_logger.init("pz_lua_commons")
+local SafeLogger = require("pz_utils/escape/safe_logger")
+local safe_logger = SafeLogger.new("pz_lua_commons")
 
 lunajson = safe_require("pz_lua_commons/grafi-tt/lunajson_1_2_3/lunajson", "lunajson")
 middleclass = safe_require("pz_lua_commons/kikito/middleclass_v4_1_1/middleclass", "middleclass")
@@ -26,5 +26,5 @@ local pz_lua_commons = {
 	},
 }
 
-safe_logger.log("Shared Loaded", 20)
+safe_logger:log("Shared Loaded", 20)
 return pz_lua_commons
