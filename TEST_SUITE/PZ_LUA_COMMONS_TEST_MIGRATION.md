@@ -123,8 +123,8 @@ This document catalogs all tests in `pz_lua_commons_test/` and identifies which 
 **Key Tests**:
 ```lua
 -- SafeLogger tests
-SafeLogger.init("TestModule")
-SafeLogger.log("message", 20)  -- Numeric levels
+local logger = SafeLogger.new("TestModule")
+logger:log("message", 20)  -- Numeric levels
 
 -- Debounce tests
 Debounce.Call("id", 5, callback, args)

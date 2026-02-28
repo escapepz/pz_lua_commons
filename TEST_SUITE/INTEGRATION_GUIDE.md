@@ -170,7 +170,8 @@ local pz_utils = require("pz_utils/shared")
 
 -- All tested functions available
 local json = pz_commons.grafi_tt.lunajson.encode({test = true})
-pz_utils.escape.SafeLogger.log("Mod loaded", 20)
+local logger = pz_utils.escape.SafeLogger.new("MyMod")
+logger:log("Mod loaded", 20)
 ```
 
 ## Troubleshooting

@@ -46,34 +46,37 @@ end
 print("\n=== SafeLogger Tests ===\n")
 
 tests.test_safelogger_init = function()
-    escape.SafeLogger.init("TestModule")
-    assert_not_nil(escape.SafeLogger, "SafeLogger should exist")
+    local logger = escape.SafeLogger.new("TestModule")
+    assert_not_nil(logger, "SafeLogger should exist")
 end
 
 tests.test_safelogger_log_with_numeric_level = function()
     -- Should not crash with numeric levels
-    escape.SafeLogger.log("Test message", 10)  -- TRACE
-    escape.SafeLogger.log("Test message", 20)  -- DEBUG
-    escape.SafeLogger.log("Test message", 30)  -- INFO
-    escape.SafeLogger.log("Test message", 40)  -- WARN
-    escape.SafeLogger.log("Test message", 50)  -- ERROR
-    escape.SafeLogger.log("Test message", 60)  -- FATAL
+    local logger = escape.SafeLogger.new("TestModule")
+    logger:log("Test message", 10)  -- TRACE
+    logger:log("Test message", 20)  -- DEBUG
+    logger:log("Test message", 30)  -- INFO
+    logger:log("Test message", 40)  -- WARN
+    logger:log("Test message", 50)  -- ERROR
+    logger:log("Test message", 60)  -- FATAL
     testsPassed = testsPassed + 1
 end
 
 tests.test_safelogger_log_with_string_level = function()
-    escape.SafeLogger.log("Test message", "TRACE")
-    escape.SafeLogger.log("Test message", "DEBUG")
-    escape.SafeLogger.log("Test message", "INFO")
-    escape.SafeLogger.log("Test message", "WARN")
-    escape.SafeLogger.log("Test message", "ERROR")
-    escape.SafeLogger.log("Test message", "FATAL")
+    local logger = escape.SafeLogger.new("TestModule")
+    logger:log("Test message", "TRACE")
+    logger:log("Test message", "DEBUG")
+    logger:log("Test message", "INFO")
+    logger:log("Test message", "WARN")
+    logger:log("Test message", "ERROR")
+    logger:log("Test message", "FATAL")
     testsPassed = testsPassed + 1
 end
 
 tests.test_safelogger_log_without_level = function()
     -- Should default to INFO (30)
-    escape.SafeLogger.log("Test message")
+    local logger = escape.SafeLogger.new("TestModule")
+    logger:log("Test message")
     testsPassed = testsPassed + 1
 end
 

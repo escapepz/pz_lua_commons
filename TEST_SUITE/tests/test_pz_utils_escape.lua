@@ -116,32 +116,35 @@ end
 -- ============================================================================
 
 TestRunner.register("Escape: SafeLogger init", function()
-	escape.SafeLogger.init("TestModule")
-	TestRunner.assert_not_nil(escape.SafeLogger, "SafeLogger should exist")
+	local logger = escape.SafeLogger.new("TestModule")
+	TestRunner.assert_not_nil(logger, "SafeLogger should exist")
 end)
 
 TestRunner.register("Escape: SafeLogger log with numeric levels", function()
-	escape.SafeLogger.log("Test message", 10) -- TRACE
-	escape.SafeLogger.log("Test message", 20) -- DEBUG
-	escape.SafeLogger.log("Test message", 30) -- INFO
-	escape.SafeLogger.log("Test message", 40) -- WARN
-	escape.SafeLogger.log("Test message", 50) -- ERROR
-	escape.SafeLogger.log("Test message", 60) -- FATAL
+	local logger = escape.SafeLogger.new("TestModule")
+	logger:log("Test message", 10) -- TRACE
+	logger:log("Test message", 20) -- DEBUG
+	logger:log("Test message", 30) -- INFO
+	logger:log("Test message", 40) -- WARN
+	logger:log("Test message", 50) -- ERROR
+	logger:log("Test message", 60) -- FATAL
 	TestRunner.passed = TestRunner.passed + 1
 end)
 
 TestRunner.register("Escape: SafeLogger log with string levels", function()
-	escape.SafeLogger.log("Test message", "TRACE")
-	escape.SafeLogger.log("Test message", "DEBUG")
-	escape.SafeLogger.log("Test message", "INFO")
-	escape.SafeLogger.log("Test message", "WARN")
-	escape.SafeLogger.log("Test message", "ERROR")
-	escape.SafeLogger.log("Test message", "FATAL")
+	local logger = escape.SafeLogger.new("TestModule")
+	logger:log("Test message", "TRACE")
+	logger:log("Test message", "DEBUG")
+	logger:log("Test message", "INFO")
+	logger:log("Test message", "WARN")
+	logger:log("Test message", "ERROR")
+	logger:log("Test message", "FATAL")
 	TestRunner.passed = TestRunner.passed + 1
 end)
 
 TestRunner.register("Escape: SafeLogger log without level", function()
-	escape.SafeLogger.log("Test message")
+	local logger = escape.SafeLogger.new("TestModule")
+	logger:log("Test message")
 	TestRunner.passed = TestRunner.passed + 1
 end)
 

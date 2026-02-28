@@ -132,15 +132,13 @@ end
 
 print("\n=== Safe Logging Example ===")
 
-local safeLogger = escape.SafeLogger
+local safeLogger = escape.SafeLogger.new("MyMod")
 if safeLogger then
-	safeLogger.init("MyMod")
-
-	safeLogger.log("This is a trace message", 10)
-	safeLogger.log("This is debug info", 20)
-	safeLogger.log("Important information", 30)
-	safeLogger.log("Warning: something unusual", 40)
-	safeLogger.log("Error occurred", 50)
+	safeLogger:log("This is a trace message", 10)
+	safeLogger:log("This is debug info", 20)
+	safeLogger:log("Important information", 30)
+	safeLogger:log("Warning: something unusual", 40)
+	safeLogger:log("Error occurred", 50)
 end
 
 -- ============================================================================

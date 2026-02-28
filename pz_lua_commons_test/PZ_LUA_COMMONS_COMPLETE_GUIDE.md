@@ -119,11 +119,11 @@ end)
 
 ```lua
 local pz_utils = require("pz_lua_commons/shared")
-local logger = pz_utils[1].SafeLogger or pz_utils.escape.SafeLogger
+local SafeLogger = pz_utils[1].SafeLogger or pz_utils.escape.SafeLogger
 
-logger.init("MyMod")
-logger.log("Hello world!", "INFO")
-logger.log("Debug info", 20)  -- 20 = DEBUG
+local logger = SafeLogger.new("MyMod")
+logger:log("Hello world!", "INFO")
+logger:log("Debug info", 20)  -- 20 = DEBUG
 ```
 
 ## Module Loading
@@ -176,8 +176,8 @@ escape.EventManager.createEvent(name)
 escape.EventManager.trigger(name, ...)
 escape.EventManager.on(name, callback)
 
-escape.SafeLogger.init("ModName")
-escape.SafeLogger.log(msg, level)
+local logger = escape.SafeLogger.new("ModName")
+logger:log(msg, level)
 
 escape.SafeRequire(path, label)
 
@@ -293,10 +293,11 @@ konijima.SendClientCommand("MyMod", "KillZombie", {x = 100, y = 200, z = 0})
 
 -- Server side
 local escape = require("pz_lua_commons/shared").escape or require("pz_lua_commons/shared")[1]
+local logger = escape.SafeLogger.new("MyMod")
 escape.EventManager.on("OnServerCommand", function(module, command, data)
     if module == "MyMod" and command == "KillZombie" then
         -- Execute command
-        escape.SafeLogger.log("Zombie killed at " .. data.x, "INFO")
+        logger:log("Zombie killed at " .. data.x, "INFO")
     end
 end)
 ```
@@ -486,7 +487,7 @@ signal.register("important:event", function(...)
     end)
 
     if not ok then
-        logger.log("Event handler error: " .. tostring(err), "ERROR")
+        logger:log("Event handler error: " .. tostring(err), "ERROR")
     end
 end)
 ```
@@ -561,7 +562,7 @@ end)
 
 ### Q: How do I enable safe logging?
 
-**A:** Call `SafeLogger.init("ModName")` once at startup.
+**A:** Create a logger instance: `local logger = SafeLogger.new("ModName")` then use `logger:log(message, level)`.
 
 ### Q: Can I create custom events?
 

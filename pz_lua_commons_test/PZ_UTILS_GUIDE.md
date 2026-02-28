@@ -141,12 +141,12 @@ Defensive logging system with log levels. Automatically detects ZUL (Zomboid Uti
 #### Example
 
 ```lua
-escape.SafeLogger.init("MyMod")
+local logger = escape.SafeLogger.new("MyMod")
 
-escape.SafeLogger.log("Starting mod", "INFO")
-escape.SafeLogger.log("Debug info", 20)        -- TRACE
-escape.SafeLogger.log("Warning: low memory", "WARN")
-escape.SafeLogger.log("Critical error", 60)    -- FATAL
+logger:log("Starting mod", "INFO")
+logger:log("Debug info", 20)        -- DEBUG
+logger:log("Warning: low memory", "WARN")
+logger:log("Critical error", 60)    -- FATAL
 ```
 
 ---
@@ -378,12 +378,13 @@ require("path/to/test_pz_utils_*.lua")
 
 ```lua
 local accumulator = {}
+local logger = escape.SafeLogger.new("EventProcessor")
 
 escape.EventManager.on("RawEvent", function(data)
     table.insert(accumulator, data)
 
     escape.Debounce.Call("process", 5, function(args)
-        escape.SafeLogger.log("Processing " .. #accumulator .. " items", "INFO")
+        logger:log("Processing " .. #accumulator .. " items", "INFO")
         accumulator = {}
     end)
 end)
@@ -417,11 +418,12 @@ end
 ### Pattern 4: Safe Module Loading
 
 ```lua
+local logger = escape.SafeLogger.new("ModuleLoader")
 local myLib = escape.SafeRequire("my_lib/core", "MyLibrary")
 if myLib then
     -- Use library
 else
-    escape.SafeLogger.log("Failed to load MyLibrary", "ERROR")
+    logger:log("Failed to load MyLibrary", "ERROR")
 end
 ```
 

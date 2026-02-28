@@ -333,15 +333,16 @@ TestRunner.register("pz_utils: SafeLogger available", function()
 	TestRunner.assert_not_nil(escape.SafeLogger, "SafeLogger should be available")
 end)
 
-TestRunner.register("pz_utils: SafeLogger.init callable", function()
+TestRunner.register("pz_utils: escape.SafeLogger.new callable", function()
 	local escape = pz_utils[1] or pz_utils.escape
-	escape.SafeLogger.init("TestModule")
+	local logger = escape.SafeLogger.new("TestModule")
 	TestRunner.passed = TestRunner.passed + 1
 end)
 
-TestRunner.register("pz_utils: SafeLogger.log with numeric level", function()
+TestRunner.register("pz_utils: SafeLogger:log with numeric level", function()
 	local escape = pz_utils[1] or pz_utils.escape
-	escape.SafeLogger.log("Test message", 30)
+	local logger = escape.SafeLogger.new("TestModule")
+	logger:log("Test message", 30)
 	TestRunner.passed = TestRunner.passed + 1
 end)
 
@@ -458,8 +459,9 @@ TestRunner.register("Integration: Events + Logging", function()
 	local escape = pz_utils[1] or pz_utils.escape
 
 	local logged = false
+	local logger = escape.SafeLogger.new("TestModule")
 	signal.register("test_log_event", function(msg)
-		escape.SafeLogger.log(msg, 30)
+		logger:log(msg, 30)
 		logged = true
 	end)
 

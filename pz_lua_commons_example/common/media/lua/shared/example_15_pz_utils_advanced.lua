@@ -4,6 +4,7 @@
 local pz_utils = require("pz_lua_commons/shared")
 local escape = pz_utils[1] or pz_utils.escape
 local konijima = pz_utils.konijima.Utilities
+local logger = escape.SafeLogger.new("AdvancedPatterns")
 
 print("\n=== PZ Utils Advanced Patterns ===\n")
 
@@ -26,7 +27,7 @@ local function createDebouncedEventProcessor(eventName, debounceId, delay)
         
         -- Debounce the processing
         escape.Debounce.Call(debounceId, delay, function(args)
-            escape.SafeLogger.log("Processing " .. #accumulator .. " accumulated " .. eventName .. " events", "INFO")
+            logger:log("Processing " .. #accumulator .. " accumulated " .. eventName .. " events", "INFO")
             
             -- Fire the actual event with accumulated data
             event:Trigger(accumulator)
@@ -44,9 +45,9 @@ local playerStatsEvent, addPlayerStatChange = createDebouncedEventProcessor("Pla
 
 -- Listen to the debounced event
 playerStatsEvent:Add(function(changes)
-    escape.SafeLogger.log("Processing " .. #changes .. " stat changes in batch", "INFO")
+    logger:log("Processing " .. #changes .. " stat changes in batch", "INFO")
     for _, change in ipairs(changes) do
-        escape.SafeLogger.log("  - " .. change.type .. ": " .. tostring(change.data), "DEBUG")
+        logger:log("  - " .. change.type .. ": " .. tostring(change.data), "DEBUG")
     end
 end)
 
@@ -71,7 +72,7 @@ function CommandDispatcher.new()
     }
     
     function dispatcher:register(commandName, handler)
-        escape.SafeLogger.log("Registering command: " .. commandName, "DEBUG")
+        logger:log("Registering command: " .. commandName, "DEBUG")
         self.handlers[commandName] = handler
         
         -- Create event for the command
@@ -80,18 +81,18 @@ function CommandDispatcher.new()
     
     function dispatcher:execute(commandName, ...)
         if not self.handlers[commandName] then
-            escape.SafeLogger.log("Unknown command: " .. commandName, "WARN")
+            logger:log("Unknown command: " .. commandName, "WARN")
             return false
         end
         
-        escape.SafeLogger.log("Executing command: " .. commandName, "DEBUG")
+        logger:log("Executing command: " .. commandName, "DEBUG")
         local success, result = pcall(self.handlers[commandName], ...)
         
         if success then
             self.eventManager.trigger("cmd_" .. commandName, result)
             return true
         else
-            escape.SafeLogger.log("Command failed: " .. commandName .. " - " .. tostring(result), "ERROR")
+            logger:log("Command failed: " .. commandName .. " - " .. tostring(result), "ERROR")
             return false
         end
     end
@@ -103,18 +104,18 @@ end
 local dispatcher = CommandDispatcher.new()
 
 dispatcher:register("heal", function(playerName, amount)
-    escape.SafeLogger.log("Healing " .. playerName .. " for " .. amount, "INFO")
+    logger:log("Healing " .. playerName .. " for " .. amount, "INFO")
     return {status = "success", healed = amount}
 end)
 
 dispatcher:register("kill", function(playerName)
-    escape.SafeLogger.log("Removing " .. playerName, "WARN")
+    logger:log("Removing " .. playerName, "WARN")
     return {status = "eliminated"}
 end)
 
 -- Listen to command events
 escape.EventManager.on("cmd_heal", function(result)
-    escape.SafeLogger.log("Heal result: " .. result.status, "INFO")
+    logger:log("Heal result: " .. result.status, "INFO")
 end)
 
 -- Execute commands
@@ -152,7 +153,7 @@ function StateMachine.new(initialState)
             if transition.condition() then
                 local oldState = self.state
                 self.state = transition.to
-                escape.SafeLogger.log("State transition: " .. oldState .. " -> " .. self.state, "DEBUG")
+                logger:log("State transition: " .. oldState .. " -> " .. self.state, "DEBUG")
                 self.onStateChange:Trigger(oldState, self.state)
                 return true
             end
@@ -179,7 +180,7 @@ end)
 
 -- Listen to state changes
 playerState.onStateChange:Add(function(from, to)
-    escape.SafeLogger.log("Player state changed: " .. from .. " => " .. to, "INFO")
+    logger:log("Player state changed: " .. from .. " => " .. to, "INFO")
 end)
 
 -- Simulate a few state checks
@@ -206,7 +207,7 @@ function CachedProperty.new(getter, ttl)
     
     function prop:get()
         if self.value == nil or self.age >= self.ttl then
-            escape.SafeLogger.log("Recomputing cached property", "DEBUG")
+            logger:log("Recomputing cached property", "DEBUG")
             self.value = self.getter()
             self.age = 0
         else
@@ -216,7 +217,7 @@ function CachedProperty.new(getter, ttl)
     end
     
     function prop:invalidate()
-        escape.SafeLogger.log("Invalidating cached property", "DEBUG")
+        logger:log("Invalidating cached property", "DEBUG")
         self.value = nil
         self.age = 0
         self.invalidateEvent:Trigger()
@@ -227,15 +228,15 @@ end
 
 -- Usage
 local playerHealthCache = CachedProperty.new(function()
-    escape.SafeLogger.log("Fetching player health from server", "INFO")
+    logger:log("Fetching player health from server", "INFO")
     return 100
 end, 20)
 
-escape.SafeLogger.log("Health: " .. playerHealthCache:get(), "INFO")
-escape.SafeLogger.log("Health (cached): " .. playerHealthCache:get(), "INFO")
+logger:log("Health: " .. playerHealthCache:get(), "INFO")
+logger:log("Health (cached): " .. playerHealthCache:get(), "INFO")
 
 playerHealthCache:invalidate()
-escape.SafeLogger.log("Health (after invalidation): " .. playerHealthCache:get(), "INFO")
+logger:log("Health (after invalidation): " .. playerHealthCache:get(), "INFO")
 
 -- ============================================================================
 -- PATTERN 5: DEPENDENCY INJECTION CONTAINER
@@ -252,7 +253,7 @@ function Container.new()
     }
     
     function container:register(name, factory, isSingleton)
-        escape.SafeLogger.log("Registering service: " .. name, "DEBUG")
+        logger:log("Registering service: " .. name, "DEBUG")
         self.services[name] = {
             factory = factory,
             singleton = isSingleton or false,
@@ -262,7 +263,7 @@ function Container.new()
     function container:get(name)
         local service = self.services[name]
         if not service then
-            escape.SafeLogger.log("Service not found: " .. name, "ERROR")
+            logger:log("Service not found: " .. name, "ERROR")
             return nil
         end
         
@@ -297,8 +298,9 @@ ioc:register("debouncer", function()
 end, true)  -- Singleton
 
 -- Use services
-local logger = ioc:get("logger")
-logger.log("Service resolved from container", "INFO")
+local containerLogger = ioc:get("logger")
+local loggerInstance = containerLogger.new("ContainerLogger")
+loggerInstance:log("Service resolved from container", "INFO")
 
 -- ============================================================================
 -- PATTERN 6: VALIDATION WRAPPER WITH SAFE EXECUTION
@@ -327,13 +329,13 @@ function ValidatedCommand:execute(context)
     for _, validator in ipairs(self.validators) do
         local valid, error = validator.fn(context)
         if not valid then
-            escape.SafeLogger.log("Validation failed: " .. validator.name .. " - " .. tostring(error), "WARN")
+            logger:log("Validation failed: " .. validator.name .. " - " .. tostring(error), "WARN")
             self.onFailure:Trigger({validator = validator.name, error = error})
             return false
         end
     end
     
-    escape.SafeLogger.log("All validations passed for " .. self.name, "DEBUG")
+    logger:log("All validations passed for " .. self.name, "DEBUG")
     self.onSuccess:Trigger(context)
     return true
 end
@@ -356,11 +358,11 @@ teleportCmd:addValidator("coords_check", function(ctx)
 end)
 
 teleportCmd.onSuccess:Add(function(ctx)
-    escape.SafeLogger.log("Teleporting to " .. ctx.x .. ", " .. ctx.y .. ", " .. ctx.z, "INFO")
+    logger:log("Teleporting to " .. ctx.x .. ", " .. ctx.y .. ", " .. ctx.z, "INFO")
 end)
 
 teleportCmd.onFailure:Add(function(err)
-    escape.SafeLogger.log("Teleport failed: " .. tostring(err), "ERROR")
+    logger:log("Teleport failed: " .. tostring(err), "ERROR")
 end)
 
 -- Execute with valid context
@@ -386,7 +388,7 @@ function DeferredOperation.new(id, delayTicks)
             
             -- Debounce the execution
             escape.Debounce.Call(self.id, self.delay, function(args)
-                escape.SafeLogger.log("Processing " .. #self.queue .. " deferred operations", "INFO")
+                logger:log("Processing " .. #self.queue .. " deferred operations", "INFO")
                 
                 for _, op in ipairs(self.queue) do
                     local success, result = pcall(op)
@@ -404,21 +406,21 @@ local saveOp = DeferredOperation.new("game_save", 30)
 
 saveOp.onComplete:Add(function(result)
     if result.success then
-        escape.SafeLogger.log("Operation completed successfully", "INFO")
+        logger:log("Operation completed successfully", "INFO")
     else
-        escape.SafeLogger.log("Operation failed", "ERROR")
+        logger:log("Operation failed", "ERROR")
     end
 end)
 
 -- Queue multiple operations
 saveOp:queue(function()
-    escape.SafeLogger.log("Saving player data...", "DEBUG")
+    logger:log("Saving player data...", "DEBUG")
 end)
 
 saveOp:queue(function()
-    escape.SafeLogger.log("Saving world data...", "DEBUG")
+    logger:log("Saving world data...", "DEBUG")
 end)
 
-escape.SafeLogger.log("Queued 2 deferred operations", "INFO")
+logger:log("Queued 2 deferred operations", "INFO")
 
 print("\n=== All advanced patterns demonstrated ===\n")
