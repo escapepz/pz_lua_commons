@@ -1,7 +1,7 @@
 -- Test Suite: pz_utils - Konijima Utilities
 -- Tests for Konijima utility functions
 
-local pz_utils = require("pz_lua_commons/shared")
+local pz_utils = require("pz_utils_shared")
 local konijima = pz_utils.konijima.Utilities
 
 -- Simple test framework
