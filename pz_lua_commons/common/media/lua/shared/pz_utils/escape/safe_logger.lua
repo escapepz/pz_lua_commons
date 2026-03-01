@@ -43,7 +43,7 @@ local SafeLogger = {}
 
 -- Create a new logger instance
 ---@param moduleName string
----@param threshold integer
+---@param threshold integer|nil
 ---@return ESC_SafeLogger_Instance
 function SafeLogger.new(moduleName, threshold)
 	local instance = {
@@ -58,7 +58,7 @@ function SafeLogger.new(moduleName, threshold)
 		local ok, result = pcall(ZUL.new, instance.moduleName)
 		if ok and result then
 			instance.logger = result
-			pcall(instance.logger.debug, instance.logger, "ZUL detected and enabled")
+			-- pcall(instance.logger.debug, instance.logger, "ZUL detected and enabled")
 		end
 	end
 
