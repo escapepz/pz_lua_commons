@@ -1,9 +1,19 @@
 -- Example: Integration of pz_lua_commons into a PZ Environment
 -- This demonstrates how to use the commons library modules in practical scenarios
 -- Compatible with plain Lua + PZ stub definitions
+-- Find script directory robustly across various environments (Lua 5.1+)
+local info = debug.getinfo(1, "S")
+local path = (info and info.source) and info.source:sub(2):gsub("\\", "/") or ""
+local root = path:match("^(.*)/TEST_SUITE/")
+root = root and (root .. "/") or ""
 
-local pz_commons = require("pz_lua_commons/shared")
-local pz_utils = require("pz_utils/shared")
+package.path = package.path .. ";" .. root .. "pz_lua_commons/common/media/lua/shared/?.lua"
+package.path = package.path .. ";" .. root .. "pz_lua_commons/common/media/lua/shared/?/init.lua"
+package.path = package.path .. ";" .. root .. "pz_lua_commons/common/media/lua/client/?.lua"
+package.path = package.path .. ";" .. root .. "pz_lua_commons/common/media/lua/client/?/init.lua"
+
+local pz_commons = require("pz_lua_commons_shared")
+local pz_utils = require("pz_utils_shared")
 
 -- ============================================================================
 -- 1. JSON SERIALIZATION WITH LUNAJSON
@@ -36,16 +46,12 @@ print("\n=== Event Signaling Example ===")
 
 local signal = pz_commons.vrld.hump.signal
 if signal then
-	-- Create custom events
-	signal.register("player_died")
-	signal.register("item_picked_up")
-
 	-- Subscribe to events
-	signal.subscribe("player_died", function()
+	signal.register("player_died", function()
 		print("Event received: Player has died")
 	end)
 
-	signal.subscribe("item_picked_up", function(itemName)
+	signal.register("item_picked_up", function(itemName)
 		print("Event received: Picked up " .. itemName)
 	end)
 
