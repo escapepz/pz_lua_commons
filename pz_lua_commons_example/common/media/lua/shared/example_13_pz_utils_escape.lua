@@ -2,8 +2,8 @@
 -- Demonstrates the escape utilities library for reliable mod development
 
 -- Load pz_utils
-local pz_utils = require("pz_lua_commons/shared")
-local escape = pz_utils[1] or pz_utils.escape
+local pz_utils = require("pz_utils_shared")
+local escape = pz_utils.escape
 
 -- ============================================================================
 -- 1. SAFELOGGER EXAMPLE - Defensive Logging
@@ -15,12 +15,12 @@ print("\n--- SafeLogger Examples ---")
 local safeLogger = escape.SafeLogger.new("MyAwesomeMod")
 
 -- Log at different levels (TRACE=10, DEBUG=20, INFO=30, WARN=40, ERROR=50, FATAL=60)
-safeLogger:log("This is a trace message", 10)       -- TRACE
-safeLogger:log("Debug information", 20)             -- DEBUG
-safeLogger:log("Informational message", 30)         -- INFO
-safeLogger:log("Warning: something unusual", 40)    -- WARN
-safeLogger:log("An error occurred", 50)             -- ERROR
-safeLogger:log("Critical failure", 60)              -- FATAL
+safeLogger:log("This is a trace message", 10) -- TRACE
+safeLogger:log("Debug information", 20) -- DEBUG
+safeLogger:log("Informational message", 30) -- INFO
+safeLogger:log("Warning: something unusual", 40) -- WARN
+safeLogger:log("An error occurred", 50) -- ERROR
+safeLogger:log("Critical failure", 60) -- FATAL
 
 -- Using string log levels (case insensitive)
 safeLogger:log("Another debug message", "DEBUG")
@@ -34,13 +34,13 @@ print("\n--- Debounce Examples ---")
 
 -- Create a debounced function that will only execute after 5 ticks of inactivity
 local function onPlayerMove(args)
-    safeLogger:log("Player moved! Arguments: " .. tostring(#args) .. " items", "INFO")
+	safeLogger:log("Player moved! Arguments: " .. tostring(#args) .. " items", "INFO")
 end
 
 -- Simulate rapid calls to the same debounced function
 for i = 1, 10 do
-    escape.Debounce.Call("player_move", 5, onPlayerMove, "x", "y", "z")
-    safeLogger:log("Debounce call #" .. i .. " - move request queued", 20)
+	escape.Debounce.Call("player_move", 5, onPlayerMove, "x", "y", "z")
+	safeLogger:log("Debounce call #" .. i .. " - move request queued", 20)
 end
 
 -- Check if debounce is active
@@ -66,11 +66,11 @@ safeLogger:log("Created event: OnPlayerDamage", "INFO")
 
 -- Add multiple listeners to the event
 local function onDamage1(damage, source)
-    safeLogger:log("Listener 1: Player took " .. damage .. " damage from " .. source, "INFO")
+	safeLogger:log("Listener 1: Player took " .. damage .. " damage from " .. source, "INFO")
 end
 
 local function onDamage2(damage, source)
-    safeLogger:log("Listener 2: ALERT! Damage detected: " .. damage, "WARN")
+	safeLogger:log("Listener 2: ALERT! Damage detected: " .. damage, "WARN")
 end
 
 playerDamageEvent:Add(onDamage1)
@@ -85,7 +85,7 @@ playerDamageEvent:Trigger(25, "Zombie")
 
 -- Test shorthand API
 escape.EventManager.on("OnZombieSpawn", function(x, y, z)
-    safeLogger:log("Zombie spawned at: " .. x .. ", " .. y .. ", " .. z, "DEBUG")
+	safeLogger:log("Zombie spawned at: " .. x .. ", " .. y .. ", " .. z, "DEBUG")
 end)
 
 escape.EventManager.trigger("OnZombieSpawn", 100, 200, 0)
@@ -100,8 +100,10 @@ safeLogger:log("Event triggered but disabled - no listeners executed", "DEBUG")
 
 -- Get event info
 local eventInfo = escape.EventManager.getEventInfo("OnPlayerDamage")
-safeLogger:log("OnPlayerDamage info: enabled=" .. tostring(eventInfo.enabled) .. 
-                      ", listeners=" .. eventInfo.listeners, "INFO")
+safeLogger:log(
+	"OnPlayerDamage info: enabled=" .. tostring(eventInfo.enabled) .. ", listeners=" .. eventInfo.listeners,
+	"INFO"
+)
 
 -- ============================================================================
 -- 4. SAFEEREQUIRE EXAMPLE - Safe Module Loading
@@ -113,9 +115,9 @@ print("\n--- SafeRequire Examples ---")
 -- It safely loads modules with error handling
 local validModule = escape.SafeRequire("pz_utils/escape/utilities", "TestModule")
 if validModule then
-    safeLogger:log("Successfully loaded utilities module", "INFO")
+	safeLogger:log("Successfully loaded utilities module", "INFO")
 else
-    safeLogger:log("Failed to load utilities module", "ERROR")
+	safeLogger:log("Failed to load utilities module", "ERROR")
 end
 
 -- Attempting to load a non-existent module returns nil
@@ -146,18 +148,18 @@ print("\n--- Combined Workflow Example ---")
 local damageQueue = {}
 
 escape.EventManager.on("RawDamage", function(playerName, damage)
-    table.insert(damageQueue, {player = playerName, damage = damage, time = os.time()})
-    
-    -- Debounce the processing of accumulated damage
-    escape.Debounce.Call("process_damage", 3, function(args)
-        safeLogger:log("Processing " .. #damageQueue .. " damage events", "INFO")
-        damageQueue = {}
-    end)
+	table.insert(damageQueue, { player = playerName, damage = damage, time = os.time() })
+
+	-- Debounce the processing of accumulated damage
+	escape.Debounce.Call("process_damage", 3, function(args)
+		safeLogger:log("Processing " .. #damageQueue .. " damage events", "INFO")
+		damageQueue = {}
+	end)
 end)
 
 -- Simulate damage events
 for i = 1, 5 do
-    escape.EventManager.trigger("RawDamage", "Player" .. i, 10 + i)
+	escape.EventManager.trigger("RawDamage", "Player" .. i, 10 + i)
 end
 
 safeLogger:log("Queued 5 damage events - will process after 3 ticks of inactivity", "INFO")
@@ -169,7 +171,7 @@ safeLogger:log("Queued 5 damage events - will process after 3 ticks of inactivit
 print("\n--- Event Listener Management Example ---")
 
 local function myListener(data)
-    safeLogger:log("MyListener called with: " .. tostring(data), "DEBUG")
+	safeLogger:log("MyListener called with: " .. tostring(data), "DEBUG")
 end
 
 local cleanupEvent = escape.EventManager.getOrCreateEvent("MyCleanup")
