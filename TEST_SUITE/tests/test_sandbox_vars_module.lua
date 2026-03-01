@@ -4,9 +4,14 @@
 local mock_pz = require("TEST_SUITE/tests/mock_pz")
 mock_pz.setupGlobalEnvironment()
 
--- Load pz_utils - setup path to point to actual pz_lua_commons modules
-package.path = package.path .. ";../../pz_lua_commons/common/media/lua/shared/?.lua"
-package.path = package.path .. ";../../pz_lua_commons/common/media/lua/shared/?/init.lua"
+-- Find project root robustly across various environments (Lua 5.1+)
+local info = debug.getinfo(1, "S")
+local path = (info and info.source) and info.source:sub(2):gsub("\\", "/") or ""
+local root = path:match("^(.*)/TEST_SUITE/")
+root = root and (root .. "/") or ""
+
+package.path = package.path .. ";" .. root .. "pz_lua_commons/common/media/lua/shared/?.lua"
+package.path = package.path .. ";" .. root .. "pz_lua_commons/common/media/lua/shared/?/init.lua"
 
 -- Load sandbox vars module
 local SandboxVarsModule = require("pz_utils/escape/sandbox_vars")
@@ -495,11 +500,21 @@ TestRunner.register("SandboxVarsModule: Error handling doesn't crash", function(
 
 	-- Test various error conditions
 	local function testErrors()
-		pcall(function() SandboxVarsModule.Get(nil) end)
-		pcall(function() SandboxVarsModule.Get(123) end)
-		pcall(function() SandboxVarsModule.GetVanilla(nil) end)
-		pcall(function() SandboxVarsModule.GetFromNamespace(nil, "key") end)
-		pcall(function() SandboxVarsModule.GetAll("InvalidNamespace") end)
+		pcall(function()
+			SandboxVarsModule.Get(nil)
+		end)
+		pcall(function()
+			SandboxVarsModule.Get(123)
+		end)
+		pcall(function()
+			SandboxVarsModule.GetVanilla(nil)
+		end)
+		pcall(function()
+			SandboxVarsModule.GetFromNamespace(nil, "key")
+		end)
+		pcall(function()
+			SandboxVarsModule.GetAll("InvalidNamespace")
+		end)
 	end
 
 	testErrors()

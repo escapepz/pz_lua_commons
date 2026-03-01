@@ -31,12 +31,16 @@ isSingleplayer = nil
 local mock_pz = require("TEST_SUITE/tests/mock_pz")
 mock_pz.setupGlobalEnvironment()
 
--- Adjust package.path to load commons from project structure
--- From TEST_SUITE/tests, go up 2 levels to project root, then into pz_lua_commons
-package.path = package.path .. ";../../pz_lua_commons/common/media/lua/shared/?.lua"
-package.path = package.path .. ";../../pz_lua_commons/common/media/lua/shared/?/init.lua"
-package.path = package.path .. ";../../pz_lua_commons/common/media/lua/client/?.lua"
-package.path = package.path .. ";../../pz_lua_commons/common/media/lua/client/?/init.lua"
+-- Find project root robustly across various environments (Lua 5.1+)
+local info = debug.getinfo(1, "S")
+local path = (info and info.source) and info.source:sub(2):gsub("\\", "/") or ""
+local root = path:match("^(.*)/TEST_SUITE/")
+root = root and (root .. "/") or ""
+
+package.path = package.path .. ";" .. root .. "pz_lua_commons/common/media/lua/shared/?.lua"
+package.path = package.path .. ";" .. root .. "pz_lua_commons/common/media/lua/shared/?/init.lua"
+package.path = package.path .. ";" .. root .. "pz_lua_commons/common/media/lua/client/?.lua"
+package.path = package.path .. ";" .. root .. "pz_lua_commons/common/media/lua/client/?/init.lua"
 
 local pz_commons = require("pz_lua_commons/shared")
 local pz_utils = require("pz_utils/shared")
