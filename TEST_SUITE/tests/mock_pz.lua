@@ -18,6 +18,25 @@ table.insert = table.insert
 table.remove = table.remove
 table.concat = table.concat
 
+-- Kahlua table extensions
+function table.isempty(t)
+	return next(t) == nil
+end
+
+function table.wipe(t)
+	for k in pairs(t) do
+		t[k] = nil
+	end
+end
+
+function table.newarray(...)
+	return { ... }
+end
+
+function table.getn(t)
+	return #t
+end
+
 -- Math functions (standard Lua)
 math.max = math.max
 math.min = math.min
@@ -32,6 +51,28 @@ string.format = string.format
 string.lower = string.lower
 string.upper = string.upper
 string.rep = string.rep
+
+-- Kahlua string extensions
+function string.trim(s)
+	return s:match("^%s*(.-)%s*$")
+end
+
+function string.split(s, delimiter)
+	local result = {}
+	local from = 1
+	local delim_from, delim_to = string.find(s, delimiter, from)
+	while delim_from do
+		table.insert(result, string.sub(s, from, delim_from - 1))
+		from = delim_to + 1
+		delim_from, delim_to = string.find(s, delimiter, from)
+	end
+	table.insert(result, string.sub(s, from))
+	return result
+end
+
+function string.contains(s, sub)
+	return string.find(s, sub, 1, true) ~= nil
+end
 
 -- ============================================================================
 -- KAHLUA VM STUBS
@@ -289,7 +330,21 @@ function Character.new(name, x, y)
 		_health = 100,
 		_inventory = {},
 		_isAlive = true,
+		_accessLevel = "None",
 	}, Character)
+end
+
+function Character:isAccessLevel(level)
+	if level == "Admin" then
+		return self._accessLevel == "Admin"
+	elseif level == "Moderator" then
+		return self._accessLevel == "Admin" or self._accessLevel == "Moderator"
+	end
+	return true
+end
+
+function Character:getUsername()
+	return self._name
 end
 
 function Character:getName()
@@ -346,11 +401,11 @@ mock_pz.Character = Character
 -- ============================================================================
 
 function mock_pz.GetTickCount()
-    return os.time() * 1000
+	return os.time() * 1000
 end
 
 function mock_pz.GetCurrentTimeMs()
-    return os.time() * 1000
+	return os.time() * 1000
 end
 
 -- ============================================================================
@@ -358,15 +413,15 @@ end
 -- ============================================================================
 
 function mock_pz.isServer()
-    return false  -- Default: client-side for testing
+	return false -- Default: client-side for testing
 end
 
 function mock_pz.isClient()
-    return true   -- Default: client-side for testing
+	return true -- Default: client-side for testing
 end
 
 function mock_pz.isSingleplayer()
-    return true   -- Default: singleplayer for testing
+	return true -- Default: singleplayer for testing
 end
 
 -- ============================================================================
@@ -412,30 +467,32 @@ local SignalRegistry = {}
 SignalRegistry.__index = SignalRegistry
 
 function SignalRegistry.new()
-    return setmetatable({
-        _handlers = {}
-    }, SignalRegistry)
+	return setmetatable({
+		_handlers = {},
+	}, SignalRegistry)
 end
 
 function SignalRegistry:register(event_name, handler)
-    if not self._handlers[event_name] then
-        self._handlers[event_name] = {}
-    end
-    self._handlers[event_name][handler] = handler
-    return handler
+	if not self._handlers[event_name] then
+		self._handlers[event_name] = {}
+	end
+	self._handlers[event_name][handler] = handler
+	return handler
 end
 
 function SignalRegistry:emit(event_name, ...)
-    if not self._handlers[event_name] then return end
-    for handler in pairs(self._handlers[event_name]) do
-        handler(...)
-    end
+	if not self._handlers[event_name] then
+		return
+	end
+	for handler in pairs(self._handlers[event_name]) do
+		handler(...)
+	end
 end
 
 function SignalRegistry:unsubscribe(event_name, handler)
-    if self._handlers[event_name] then
-        self._handlers[event_name][handler] = nil
-    end
+	if self._handlers[event_name] then
+		self._handlers[event_name][handler] = nil
+	end
 end
 
 mock_pz.SignalRegistry = SignalRegistry
@@ -445,8 +502,8 @@ mock_pz.SignalRegistry = SignalRegistry
 -- ============================================================================
 
 -- Admin/Staff status (mockable)
-local admin_list = {}  -- Set of admin names
-local staff_list = {}  -- Set of staff names
+local admin_list = {} -- Set of admin names
+local staff_list = {} -- Set of staff names
 local client_is_admin = false
 local client_is_staff = false
 
@@ -575,7 +632,7 @@ mock_pz.konijima = {}
 
 -- Client environment checks
 function mock_pz.konijima.IsSinglePlayer()
-	return true  -- Default: single player for testing
+	return true -- Default: single player for testing
 end
 
 function mock_pz.konijima.IsSinglePlayerDebug()
@@ -608,7 +665,7 @@ function mock_pz.konijima.SplitString(str, delimiter)
 	if not str or str == "" then
 		return {}
 	end
-	
+
 	local result = {}
 	local pattern = "([^" .. delimiter .. "]*)"
 	for match in string.gmatch(str .. delimiter, pattern .. delimiter) do
@@ -619,18 +676,22 @@ end
 
 -- Square utilities
 function mock_pz.konijima.SquareToString(square)
-	if not square then return nil end
+	if not square then
+		return nil
+	end
 	return square.x .. "|" .. square.y .. "|" .. square.z
 end
 
 function mock_pz.konijima.StringToSquare(str)
-	if not str then return nil end
+	if not str then
+		return nil
+	end
 	local parts = mock_pz.konijima.SplitString(str, "|")
 	if #parts >= 3 then
 		return {
 			x = tonumber(parts[1]),
 			y = tonumber(parts[2]),
-			z = tonumber(parts[3])
+			z = tonumber(parts[3]),
 		}
 	end
 	return nil
@@ -665,8 +726,10 @@ end
 
 function mock_pz.konijima.IsPlayerInRange(player, x, y, startX, endX, distance)
 	-- Mock: return false if no player
-	if not player then return false end
-	return true  -- Assume in range if player exists
+	if not player then
+		return false
+	end
+	return true -- Assume in range if player exists
 end
 
 -- Electricity utilities
@@ -689,7 +752,9 @@ end
 -- Moveable object utilities
 function mock_pz.konijima.GetMoveableDisplayName(moveable)
 	-- Mock: return nil for invalid input
-	if not moveable then return nil end
+	if not moveable then
+		return nil
+	end
 	return moveable.displayName or "Object"
 end
 
@@ -711,6 +776,96 @@ function mock_pz.setupGlobalEnvironment()
 	_G.isClient = mock_pz.isClient
 	_G.isSingleplayer = mock_pz.isSingleplayer
 	_G.SandboxVars = mock_pz.SandboxVars
+
+	-- Kahlua/PZ globals
+	_G.serialize = function(t)
+		-- Basic mock: return a JSON-like string if jsonlua is available, else just a placeholder
+		local ok, json = pcall(require, "pz_lua_commons/rxi/jsonlua_0_1_2/json")
+		if ok and json then
+			return json.encode(t)
+		end
+		return "{serialize_mock}"
+	end
+
+	_G.deserialize = function(s)
+		if s == "{serialize_mock}" then
+			return {}
+		end
+		local ok, json = pcall(require, "pz_lua_commons/rxi/jsonlua_0_1_2/json")
+		if ok and json then
+			return json.decode(s)
+		end
+		return {}
+	end
+
+	_G.pp = function(t)
+		return tostring(t)
+	end
+
+	_G.ZombRand = function(max)
+		return math.random(0, max - 1)
+	end
+
+	_G.ZombRandFloat = function(min, max)
+		return min + math.random() * (max - min)
+	end
+
+	_G.getPlayer = function()
+		return Character.new("Hero")
+	end
+
+	_G.instanceof = function(obj, className)
+		if not obj then
+			return false
+		end
+		-- Basic mock: if it looks like an IsoPlayer, say it is
+		if className == "IsoPlayer" then
+			return true
+		end
+		return false
+	end
+
+	_G.isDebugEnabled = function()
+		return false
+	end
+
+	_G.sendClientCommand = function() end
+	_G.sendServerCommand = function() end
+	_G.triggerEvent = function() end
+
+	_G.IsoUtils = {
+		DistanceTo = function(x1, y1, z1, x2, y2, z2)
+			local dx = x1 - x2
+			local dy = y1 - y2
+			local dz = z1 - z2
+			return math.sqrt(dx * dx + dy * dy + dz * dz)
+		end,
+	}
+
+	_G.GameTime = {
+		getInstance = function()
+			return {
+				getNightsSurvived = function()
+					return 0
+				end,
+			}
+		end,
+	}
+
+	_G.getWorld = function()
+		return {
+			getWorld = function()
+				return "test_world"
+			end,
+		}
+	end
+
+	_G.getSaveInfo = function(world)
+		return {
+			gameMode = "SinglePlayer",
+			saveName = world,
+		}
+	end
 end
 
 return mock_pz

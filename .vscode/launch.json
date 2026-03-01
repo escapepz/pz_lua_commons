@@ -34,10 +34,18 @@
             "stopOnEntry": false
         },
         {
-            "name": "Debug Example",
+            "name": "Debug pz_lua_commons_test",
             "type": "lua",
             "request": "launch",
-            "program": "${workspaceFolder}/TEST_SUITE/examples/example_usage.lua",
+            "program": "${workspaceFolder}/TEST_SUITE/tests/run_pz_lua_commons_test.lua",
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false
+        },
+        {
+            "name": "Debug pz_lua_commons_example",
+            "type": "lua",
+            "request": "launch",
+            "program": "${workspaceFolder}/TEST_SUITE/tests/run_pz_lua_commons_example.lua",
             "cwd": "${workspaceFolder}",
             "stopOnEntry": false
         },
