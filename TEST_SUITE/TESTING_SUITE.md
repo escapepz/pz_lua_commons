@@ -1,246 +1,106 @@
 # PZ Lua Commons Testing Suite
 
-Complete integration test suite for validating `pz_lua_commons` compatibility with Project Zomboid stub definitions.
+Complete integration test suite for validating `pz_lua_commons` compatibility with Project Zomboid Build 42 stub definitions.
+
+## Overview
+
+The **TEST_SUITE** provides a plain-Lua environment that mocks essential Project Zomboid engine APIs. This allows for rapid development and validation of libraries without requiring the full game runtime or complex setup.
 
 ## Deliverables
 
-| File | Purpose | Location |
-|------|---------|----------|
-| `example_usage.lua` | Real-world integration patterns | `examples/` |
-| `mock_pz.lua` | PZ stub implementations for testing | `tests/` |
-| `test_common_lib.lua` | Comprehensive test suite (50+ tests) | `tests/` |
-| `TEST_ARCHITECTURE.md` | How tests ensure stub compatibility | Root |
-| `INTEGRATION_GUIDE.md` | Step-by-step integration instructions | Root |
+| File                           | Purpose                              | Location    |
+| ------------------------------ | ------------------------------------ | ----------- |
+| `test_common_lib.lua`          | Core integration tests (50+ tests)   | `tests/`    |
+| `test_pz_utils_escape.lua`     | escape utility tests (32 tests)      | `tests/`    |
+| `test_pz_utils_konijima.lua`   | konijima utility tests (39 tests)    | `tests/`    |
+| `test_sandbox_vars_module.lua` | Sandbox variable module tests        | `tests/`    |
+| `mock_pz.lua`                  | Comprehensive PZ API mocks and stubs | `tests/`    |
+| `example_usage.lua`            | Real-world integration patterns      | `examples/` |
 
 ## Quick Test Run
 
+To execute the full suite, run the following commands from the `TEST_SUITE/tests` directory:
+
 ```bash
-cd TEST_SUITE/tests
 lua test_common_lib.lua
+lua test_pz_utils_escape.lua
+lua test_pz_utils_konijima.lua
+lua test_sandbox_vars_module.lua
 ```
 
-Expected: **All tests pass** (50+ passed, 0 failed)
-
-**Status**: ✓ Tests working with mock implementations
+Expected: **All tests pass** (120+ total tests, 0 failed).
 
 ## What's Tested
 
-### Core Libraries (25 tests)
-- ✓ lunajson (JSON encoding/decoding)
-- ✓ middleclass (OOP with inheritance)
-- ✓ hump.signal (Event system)
-- ✓ pz_utils.escape (Logging, debouncing, events)
+### Core Libraries
 
-### Integration Workflows (5 tests)
-- ✓ JSON + OOP (serialize custom classes)
-- ✓ Events + Logging (event emission with logging)
-- ✓ Debounce + OOP (debounced method calls)
-- ✓ Commons + Mock Stubs (real-world scenario)
-- ✓ Multi-library workflows
+- **lunajson**: JSON encoding/decoding accuracy and round-trip consistency.
+- **middleclass**: OOP patterns, inheritance, and instance management.
+- **hump.signal**: Event signaling, subscriptions, and pattern matching.
+- **pz_utils.escape**: SafeLogger, Debounce, EventManager, and SafeRequire.
+- **pz_utils.konijima**: Environment detection, administrative checks, and utility functions.
 
-### Stub Compatibility (5+ tests)
-- ✓ ArrayList operations
-- ✓ Vector2f/Vector3f geometry
-- ✓ Character health/inventory
-- ✓ Item properties
-- ✓ Registry operations
+### Integration Workflows
 
-### Module Loading (5 tests)
-- ✓ pz_lua_commons loads
-- ✓ pz_utils loads
-- ✓ All sub-libraries available
-- ✓ Correct interfaces exposed
+- **JSON + OOP**: Serialization and deserialization of custom class instances.
+- **Events + Logging**: Verification of event-driven logging systems.
+- **Mocks + Commons**: Validation that shared libraries work seamlessly with PZ stub objects.
+
+### Stub Compatibility
+
+- **Collections**: `ArrayList` and `HashMap` behavior.
+- **Geometry**: `Vector2f` and `Vector3f` distance and position calculations.
+- **Game Objects**: `Character`, `Item`, `Registry`, and `GameState` mock interactions.
 
 ## Architecture
 
-### Test Framework
-Simple assertion-based framework (no external dependencies):
-```lua
-TestRunner.assert_equals(actual, expected, "message")
-TestRunner.assert_true(value, "message")
-TestRunner.assert_not_nil(value, "message")
-TestRunner.assert_is_type(value, "type", "message")
-```
+### Mocking Strategy (mock_pz.lua)
 
-### Stub Mocking Strategy
-Minimal, contract-based mocks that:
-1. Implement only stub-defined methods
-2. Match exact stub signatures
-3. Use same behavior as real stubs
-4. Enable testing without PZ runtime
+The suite uses minimal, contract-based mocks that:
 
-Example:
-```lua
--- Mock ArrayList
-local ArrayList = {}
-function ArrayList:add(item) end
-function ArrayList:get(index) end
-function ArrayList:size() end
+1. **Match exact stub signatures**: Method names and parameter counts match `projectzomboid_lua_stub.xml`.
+2. **Implement stub behavior**: Mocks behave like their Java counterparts (e.g., `ArrayList:add` returns boolean).
+3. **Environment Globals**: Mocks provide necessary PZ globals (`isServer`, `isClient`, `isSingleplayer`).
 
--- Test it
-local list = ArrayList.new()
-list:add("item")
-assert(list:size() == 1)
-```
+### Rule: No Invented APIs
 
-## Rules Enforced
+Tests strictly enforce the use of official stub-defined methods.
 
-### ✓ Only Use Stub-Defined APIs
-```lua
--- Stub defines this
-character:takeDamage(25)
-character:isAlive()
+- **Allowed**: `character:takeDamage(25)`, `character:isAlive()`.
+- **Forbidden**: `character:setHealth(50)` (not in official stubs).
 
--- Stub does NOT define this
-character:setHealth(50)  -- Would fail test
-```
+### Environment Audit
 
-### ✓ No Invented Engine APIs
-```lua
--- Allowed - pure Lua + stub objects
-local data = {x = 100, y = 200}
-local item = Item.new("gun", 5, 100)
+The following PZ-specific globals are mocked to ensure module loading and utility execution:
 
--- NOT allowed - invented PZ functions
-getGameState():setWeather("rain")  -- Not in stub
-```
-
-### ✓ Mocks Match Stubs Exactly
-```lua
--- If stub defines method with signature:
--- class ArrayList { boolean add(Object obj) }
-
--- Mock must implement same signature:
-function ArrayList:add(item)
-    table.insert(self._items, item)
-    return true  -- Return type matters!
-end
-
--- Tests verify this
-TestRunner.assert_equals(type(result), "boolean")
-```
-
-### ✓ Integration Tests Use Real Libraries
-```lua
--- Test uses actual pz_lua_commons loaded from disk
-local pz_commons = require("pz_lua_commons/shared")
-local data = {test = true}
-
--- Combined with mocks
-local char = Character.new("Bob", 100, 100)
-
--- Validates real library + stub objects work together
-local json = pz_commons.grafi_tt.lunajson.encode({char = char.name})
-```
+- `isServer()` / `isClient()` / `isSingleplayer()`
+- `getPlayer()` / `getOnlinePlayers()`
+- `instanceof(obj, class)`
+- `sendClientCommand()` / `sendServerCommand()`
+- `triggerEvent()`
 
 ## Files Explained
 
-### `example_usage.lua`
-**What it shows**:
-- JSON processing with lunajson
-- Events with hump.signal
-- OOP patterns with middleclass
-- Debouncing and logging with pz_utils
-- Combined real-world workflows
-
-**How to use**:
-1. Reference as implementation guide
-2. Load in PZ as mod script
-3. Adapt patterns to your mod
-
 ### `mock_pz.lua`
-**What it provides**:
 
-**Collections**:
-- ArrayList - dynamic array (add, get, remove, size, toArray)
-- HashMap - key-value map (put, get, remove, size, keySet)
-
-**Geometry**:
-- Vector2f - 2D position (x, y, distance)
-- Vector3f - 3D position (x, y, z, distance)
-
-**Game Objects**:
-- Character - player/zombie (health, position, inventory, damage)
-- Item - equipment (name, weight, value, count)
-- GameState - pause/time state
-- Registry - generic object storage
-- Coroutine - VM coroutine stub
-
-**Time**:
-- GetTickCount() - milliseconds since start
-- GetCurrentTimeMs() - current time in ms
-
-**Setup**:
-```lua
-local mock_pz = require("mock_pz")
-mock_pz.setupGlobalEnvironment()  -- Makes mocks global
-```
+The backbone of the test environment. It injects PZ-specific classes and functions into the global scope. It handles Java-style collections (`ArrayList`, `HashMap`) and engine objects using Lua tables to simulate their behavior.
 
 ### `test_common_lib.lua`
-**Structure**:
 
-1. **Imports**: Loads mocks, pz_utils, pz_lua_commons
-2. **Framework**: Simple TestRunner with assertions
-3. **Tests**: 50+ organized test cases
-4. **Execution**: Runs all tests, prints summary
+The primary integration suite. It loads the full `pz_lua_commons` and `pz_utils` packages and verifies that all sub-libraries are available and functional within the mocked environment.
 
-**Run**:
-```bash
-lua test_common_lib.lua
-```
+### `test_pz_utils_konijima.lua`
 
-**Output**:
-```
-======================================================================
-PZ_LUA_COMMONS INTEGRATION TEST SUITE
-======================================================================
+A specialized suite for testing environment-aware utilities. It includes 39 tests covering admin/staff permission logic, string processing, and coordinate parsing.
 
-Module loading: pz_lua_commons exists                    OK
-Module loading: pz_utils exists                         OK
-lunajson: encode basic table                            OK
-...
-(50 total tests)
+### `example_usage.lua`
 
-======================================================================
-TEST RESULTS
-======================================================================
-Passed: 50
-Failed: 0
-Total:  50
-
-✓ ALL TESTS PASSED
-======================================================================
-```
-
-## How Tests Ensure Compatibility
-
-### 1. Mock Contract Matching
-Each mock implements ONLY the methods in the actual PZ stub.
-Tests verify these mocks work correctly.
-
-### 2. Integration Testing
-Combines real libraries (pz_lua_commons) with mocks to ensure they work together.
-
-### 3. Stub-Defined Method Verification
-Tests use ONLY stub-defined method names and signatures.
-If a method isn't in the stub, the test won't use it.
-
-### 4. No API Invention
-Code never calls methods that don't exist in either:
-- The stub definition, OR
-- Plain Lua standard library
-
-### 5. Type Safety
-Tests verify return types match stub contracts:
-```lua
--- Stub says: encode returns string
-local json = lunajson.encode(data)
-TestRunner.assert_is_type(json, "string")
-```
+A reference file demonstrating how to use the framework in a real mod. It's a "live" documentation of best practices combining JSON, OOP, and events.
 
 ## Extending Tests
 
-### Add a new test:
+### Add a New Test Case
+
 ```lua
 TestRunner.register("Feature: description", function()
     local result = someFunction()
@@ -248,68 +108,20 @@ TestRunner.register("Feature: description", function()
 end)
 ```
 
-### Add a new stub mock:
-```lua
--- In mock_pz.lua
-local NewStub = {}
-NewStub.__index = NewStub
+### Add a New Stub Mock
 
-function NewStub.new()
-    return setmetatable({}, NewStub)
-end
-
-function NewStub:method()
-    -- Implementation matching actual stub
-end
-
-mock_pz.NewStub = NewStub
-
--- Then add test
-TestRunner.register("Stub: NewStub.method works", function()
-    local obj = NewStub.new()
-    obj:method()
-    TestRunner.passed = TestRunner.passed + 1
-end)
-```
+1. Define the class in `mock_pz.lua`.
+2. Implement the methods based on the official stub definition.
+3. Expose it via `mock_pz.setupGlobalEnvironment()`.
 
 ## Troubleshooting
 
-**Tests fail - "module not found"**
-```lua
--- Add to test file or mod:
-package.path = package.path .. ";pz_lua_commons/common/media/lua/shared/?.lua"
-```
-
-**Code works in test but fails in PZ**
-- Check TEST_ARCHITECTURE.md "Rule: No Invented APIs"
-- Verify method exists in actual PZ stub
-- Add test case for the failing pattern
-
-**Stub method differs from mock**
-- Update mock_pz.lua to match actual stub
-- Add test verifying the new behavior
-- Re-run test suite
-
-## References
-
-- **Stub file**: `projectzomboid_lua_stub.xml`
-- **Test file**: `tests/test_common_lib.lua`
-- **Mock file**: `tests/mock_pz.lua`
-- **Example**: `examples/example_usage.lua`
-- **Architecture docs**: `TEST_ARCHITECTURE.md`
-- **Integration guide**: `INTEGRATION_GUIDE.md`
-
-## Test Results Summary
-
-- **Total Tests**: 50+
-- **Coverage**: Core libs + integration + stubs
-- **Success Criteria**: 100% pass rate
-- **Compatibility**: Full stub compliance guaranteed
+- **"module not found"**: Ensure `package.path` includes the library source directories.
+- **"undefined global 'isServer'"**: Call `mock_pz.setupGlobalEnvironment()` before requiring libraries.
+- **Test fails but code works in PZ**: Check if you are using an "invented" API that works in the real game but isn't in the official stubs (stubs are the baseline for compatibility).
 
 ---
 
-**Last Updated**: 2026-02-13  
-**Status**: ✓ All tests passing with mock implementations  
-**Stub Version**: Project Zomboid (current)  
-**Test Coverage**: 50+ comprehensive test cases  
-**Mock Status**: Complete and functional
+**Last Updated**: March 2026  
+**Status**: ✓ All tests passing (120+ cases)  
+**Compatibility**: Build 42 (current)

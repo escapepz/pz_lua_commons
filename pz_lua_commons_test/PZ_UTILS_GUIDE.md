@@ -1,61 +1,99 @@
-# PZ Utils Guide - Complete Reference
+# PZ Utils Guide — Complete Reference
 
-This guide covers the `pz_utils` module and its two sub-libraries: **Escape Utilities** and **Konijima Utilities**.
+This guide covers the `pz_utils` module and its two sub-libraries: **Escape Utilities** and **Konijima Utilities**, as reflected in the actual test codebase of `pz_lua_commons_test`.
 
 ## Quick Start
 
 ```lua
-local pz_utils = require("pz_lua_commons/shared")
-local escape = pz_utils[1] or pz_utils.escape
+local pz_utils = require("pz_utils_shared")
+local escape   = pz_utils[1] or pz_utils.escape
 local konijima = pz_utils.konijima.Utilities
 ```
+
+> **Note:** The require path is `"pz_utils_shared"` — not `"pz_lua_commons/shared"`.
 
 ## Table of Contents
 
 1. [Escape Utilities](#escape-utilities)
+    - [SafeLogger](#safelogger)
     - [Debounce](#debounce)
     - [EventManager](#eventmanager)
-    - [SafeLogger](#safelogger)
     - [SafeRequire](#saferequire)
     - [Utilities](#utilities)
 2. [Konijima Utilities](#konijima-utilities)
     - [Environment Detection](#environment-detection)
     - [Permission Checks](#permission-checks)
+    - [String Utilities](#string-utilities)
+    - [Square Utilities](#square-utilities)
     - [Networking](#networking)
-    - [Player & Grid Utilities](#player--grid-utilities)
-3. [Examples](#examples)
-4. [Testing](#testing)
+    - [Player Utilities](#player-utilities)
+    - [Electricity](#electricity)
+    - [Server Info](#server-info)
+    - [Inventory](#inventory)
+    - [Moveable Objects](#moveable-objects)
+3. [Test Structure](#test-structure)
+4. [Test Framework](#test-framework)
+5. [Common Patterns](#common-patterns)
+6. [Best Practices](#best-practices)
 
 ---
 
 ## Escape Utilities
 
+Access: `pz_utils[1]` or `pz_utils.escape`
+
 Escape utilities are designed for robust, error-tolerant mod development.
+
+### SafeLogger
+
+Defensive logging system with log levels.
+
+#### Log Levels
+
+| Level | Number |
+| ----- | ------ |
+| TRACE | 10     |
+| DEBUG | 20     |
+| INFO  | 30     |
+| WARN  | 40     |
+| ERROR | 50     |
+| FATAL | 60     |
+
+#### API
+
+```lua
+local logger = escape.SafeLogger.new("ModuleName")
+
+logger:log("message", "INFO")     -- string level
+logger:log("message", 30)         -- numeric level (INFO)
+logger:log("message")             -- defaults to INFO
+```
+
+---
 
 ### Debounce
 
 Delays callback execution until a period of inactivity has passed. Useful for rate-limiting expensive operations.
 
-#### Functions
+#### API
 
-| Function    | Parameters                                           | Returns   | Description                                             |
+| Function    | Signature                                            | Returns   | Description                                             |
 | ----------- | ---------------------------------------------------- | --------- | ------------------------------------------------------- |
-| `Call`      | `id: string, delay: number, callback: function, ...` | `boolean` | Queue or reset a debounced call                         |
-| `Update`    | none                                                 | `boolean` | Process all pending debounces (call once per game tick) |
-| `Cancel`    | `id: string`                                         | `boolean` | Cancel a specific debounce                              |
-| `CancelAll` | none                                                 | `number`  | Cancel all pending debounces, returns count             |
-| `IsActive`  | `id: string`                                         | `boolean` | Check if debounce is waiting to execute                 |
+| `Call`      | `(id: string, delay: number, callback: function, ...)`| `boolean` | Queue or reset a debounced call                         |
+| `Update`    | `()`                                                 | `boolean` | Process all pending debounces (call once per game tick) |
+| `Cancel`    | `(id: string)`                                       | `boolean` | Cancel a specific debounce (`false` if not found)       |
+| `CancelAll` | `()`                                                | `number`  | Cancel all pending debounces, returns count cancelled   |
+| `IsActive`  | `(id: string)`                                       | `boolean` | Check if debounce is waiting to execute                 |
 
 #### Behavior
 
 1. First call starts a timer (delay ticks)
-2. Repeated calls reset timer and accumulate arguments
+2. Repeated calls with the same `id` reset the timer and accumulate arguments
 3. After delay expires, executes callback once with accumulated arguments
 
 #### Example
 
 ```lua
--- Debounce player movement handling
 escape.Debounce.Call("player_move", 5, function(args)
     print("Player moved to: " .. tostring(args[1]))
 end, "100", "200", "0")
@@ -70,19 +108,20 @@ escape.Debounce.Update()
 
 Custom event system for publish-subscribe patterns. Events can be enabled/disabled and track listener count.
 
-#### Functions
+#### Top-Level API
 
-| Function           | Parameters                              | Returns      | Description                        |
-| ------------------ | --------------------------------------- | ------------ | ---------------------------------- |
-| `createEvent`      | `name: string`                          | `table`      | Create a new event or get existing |
-| `getOrCreateEvent` | `name: string`                          | `table`      | Get existing event or create new   |
-| `on`               | `eventName: string, callback: function` | `table`      | Shorthand to add listener          |
-| `trigger`          | `eventName: string, ...`                | none         | Fire an event with arguments       |
-| `off`              | `eventName: string, callback: function` | none         | Remove a listener                  |
-| `getEventInfo`     | `eventName: string`                     | `table\|nil` | Get event metadata                 |
-| `getAllEventsInfo` | none                                    | `table`      | Get info for all events            |
+| Function           | Signature                                   | Returns      | Description                        |
+| ------------------ | ------------------------------------------- | ------------ | ---------------------------------- |
+| `createEvent`      | `(name: string)`                            | `table`      | Create a new event or get existing |
+| `on`               | `(eventName: string, callback: function)`   | `table`      | Shorthand to add listener          |
+| `off`              | `(eventName: string, callback: function)`   | none         | Remove a listener                  |
+| `trigger`          | `(eventName: string, ...)`                  | none         | Fire an event with arguments       |
+| `getEventInfo`     | `(eventName: string)`                       | `table\|nil` | Get event metadata                 |
+| `getAllEventsInfo`  | `()`                                        | `table`      | Get info for all events            |
 
-#### Event Methods
+Direct access to the event table: `escape.EventManager.events[name]`
+
+#### Event Instance Methods
 
 ```lua
 local event = escape.EventManager.createEvent("MyEvent")
@@ -99,54 +138,14 @@ event:IsExecuting()                    -- Check if currently firing
 #### Example
 
 ```lua
--- Create event
 local damageEvent = escape.EventManager.createEvent("PlayerDamage")
 
--- Add listeners
 damageEvent:Add(function(damage, source)
     print("Took " .. damage .. " damage from " .. source)
 end)
 
--- Trigger event
 damageEvent:Trigger(25, "Zombie")
-
--- Check state
 print("Listeners: " .. damageEvent:GetListenerCount())
-```
-
----
-
-### SafeLogger
-
-Defensive logging system with log levels. Automatically detects ZUL (Zomboid Utilities Library) if available.
-
-#### Log Levels
-
-| Level | Number | Method |
-| ----- | ------ | ------ |
-| TRACE | 10     | debug  |
-| DEBUG | 20     | debug  |
-| INFO  | 30     | info   |
-| WARN  | 40     | warn   |
-| ERROR | 50     | error  |
-| FATAL | 60     | fatal  |
-
-#### Functions
-
-| Function | Parameters                        | Description                 |
-| -------- | --------------------------------- | --------------------------- |
-| `init`   | `moduleName: string\|nil`         | Initialize with module name |
-| `log`    | `msg: any, level: string\|number` | Log a message               |
-
-#### Example
-
-```lua
-local logger = escape.SafeLogger.new("MyMod")
-
-logger:log("Starting mod", "INFO")
-logger:log("Debug info", 20)        -- DEBUG
-logger:log("Warning: low memory", "WARN")
-logger:log("Critical error", 60)    -- FATAL
 ```
 
 ---
@@ -155,14 +154,10 @@ logger:log("Critical error", 60)    -- FATAL
 
 Safely loads modules with error handling. Returns `nil` on failure.
 
-#### Example
-
 ```lua
-local myModule = escape.SafeRequire("path/to/module", "ModuleName")
-if myModule then
-    print("Module loaded successfully")
-else
-    print("Failed to load module")
+local result = escape.SafeRequire("pz_utils/escape/utilities", "MyLabel")
+if result then
+    -- module loaded
 end
 ```
 
@@ -172,28 +167,23 @@ end
 
 Helper functions for real-world time tracking.
 
-#### Functions
-
 | Function          | Returns  | Description                  |
 | ----------------- | -------- | ---------------------------- |
-| `GetIRLTimestamp` | `number` | Get Unix timestamp (seconds) |
-
-#### Example
+| `GetIRLTimestamp`  | `number` | Get Unix timestamp (seconds) |
 
 ```lua
-local timestamp = escape.Utilities.GetIRLTimestamp()
-print("Current time: " .. timestamp)
+local t = escape.Utilities.GetIRLTimestamp()  -- positive number
 ```
 
 ---
 
 ## Konijima Utilities
 
-Konijima utilities provide Project Zomboid-specific functionality.
+Access: `pz_utils.konijima.Utilities`
+
+Project Zomboid-specific functionality.
 
 ### Environment Detection
-
-Determine the game environment (single player, client, server).
 
 ```lua
 konijima.IsSinglePlayer()           -- Not server, not client
@@ -203,61 +193,65 @@ konijima.IsClientOrSinglePlayer()   -- Client or single player
 konijima.IsServerOrSinglePlayer()   -- Server or single player
 ```
 
+All return `boolean`. `IsSinglePlayerDebug() == true` implies `IsSinglePlayer() == true`. Single player and client-only are mutually exclusive.
+
 ---
 
 ### Permission Checks
-
-#### Client-Side (Local Player)
 
 ```lua
 konijima.IsClientAdmin()            -- Is local player admin?
 konijima.IsClientStaff()            -- Is local player admin or moderator?
 ```
 
-#### Server-Side (Remote Players)
+Both return `boolean`. In single player, admin and staff status are identical.
+
+---
+
+### String Utilities
 
 ```lua
--- By player object
-konijima.IsPlayerAdmin(playerObj)
+local parts = konijima.SplitString("apple,banana,cherry", ",")
+-- Returns: {"apple", "banana", "cherry"}
 
--- By username
-konijima.IsPlayerAdmin("PlayerName")
-
--- Check for staff (admin or moderator)
-konijima.IsPlayerStaff(playerObjOrUsername)
+konijima.SplitString("100|200|300", "|")    -- pipe delimiter
+konijima.SplitString("hello", ",")          -- no match → {"hello"}
+konijima.SplitString("", ",")              -- empty → table
+konijima.SplitString("a,,c", ",")          -- consecutive → {"a", "", "c"}
 ```
+
+---
+
+### Square Utilities
+
+```lua
+local squareStr = konijima.SquareToString(square)   -- Returns "x|y|z"
+local coords    = konijima.StringToSquare("100|200|0")
+```
+
+The coordinate string format is `"x|y|z"` using pipe delimiters — parseable with `SplitString`.
 
 ---
 
 ### Networking
 
-Commands for client-server communication.
-
 #### Client → Server
 
 ```lua
 konijima.SendClientCommand(module, command, data)
--- Example:
-konijima.SendClientCommand("MyMod", "RequestInfo", {target = "player1"})
 ```
 
 #### Server → Client(s)
 
 ```lua
--- To specific client
-konijima.SendServerCommandTo(targetPlayer, module, command, data)
-
--- To all clients
+konijima.SendServerCommandTo(player, module, command, data)
 konijima.SendServerCommandToAll(module, command, data)
-
--- To clients in range
 konijima.SendServerCommandToAllInRange(x, y, z, minDist, maxDist, module, command, data)
 ```
 
 #### Example
 
 ```lua
--- Server broadcasts announcement to all players within 20 blocks
 konijima.SendServerCommandToAllInRange(
     100, 200, 0,           -- Center coordinates
     0, 20,                 -- Min/max distance
@@ -269,106 +263,214 @@ konijima.SendServerCommandToAllInRange(
 
 ---
 
-### Player & Grid Utilities
-
-#### Player Operations
+### Player Utilities
 
 ```lua
--- Get player by username (server only)
-local player = konijima.GetPlayerFromUsername("PlayerName")
-
--- Check if player is in range
+local player  = konijima.GetPlayerFromUsername("PlayerName")
 local inRange = konijima.IsPlayerInRange(playerObj, x, y, z, minDist, maxDist)
 ```
 
-#### Grid Square Operations
+`IsPlayerInRange` handles `nil` player gracefully, returning `false`.
+
+---
+
+### Electricity
 
 ```lua
--- Convert square to string
-local squareStr = konijima.SquareToString(square)  -- Returns: "100|200|0"
-
--- Parse string to coordinates
-local coords = konijima.StringToSquare("100|200|0")
+local hasElectricity = konijima.SquareHasElectricity(square)
 ```
 
-#### Helper Functions
+Handles `nil` square gracefully (does not crash).
+
+---
+
+### Server Info
 
 ```lua
--- Split string by delimiter
-local parts = konijima.SplitString("apple,banana,orange", ",")
--- Returns: {"apple", "banana", "orange"}
+local name = konijima.GetServerName()  -- returns string
+```
 
--- Check if square has electricity
-local hasElectricity = konijima.SquareHasElectricity(square)
+---
 
--- Get server/save name
-local serverName = konijima.GetServerName()
+### Inventory
 
--- Find items by tag
-local foodItems = konijima.FindAllItemInInventoryByTag(inventory, "Food")
+```lua
+local items = konijima.FindAllItemInInventoryByTag(inventory, "Food")
+```
 
--- Get object display name
+---
+
+### Moveable Objects
+
+```lua
 local displayName = konijima.GetMoveableDisplayName(object)
 ```
 
----
-
-## Examples
-
-### Example Files
-
-1. **example_13_pz_utils_escape.lua** - Escape utilities with practical examples
-2. **example_14_pz_utils_konijima.lua** - Konijima utilities with Project Zomboid context
-3. **example_15_pz_utils_advanced.lua** - Advanced patterns:
-    - Debounced event system
-    - Command dispatcher
-    - State machine
-    - Cached properties
-    - Dependency injection
-    - Validated execution
-    - Deferred operations
-
-### Running Examples
-
-```bash
--- Load in Project Zomboid with mod installed
-require("path/to/example_XX_pz_utils_*.lua")
-```
+Returns `nil` when passed `nil`.
 
 ---
 
-## Testing
+## Test Structure
 
-### Test Files
+The test project has **three test files** across two directory trees. There are no example files in this project.
 
-1. **test_pz_utils_escape.lua** - Tests for Escape utilities
-2. **test_pz_utils_konijima.lua** - Tests for Konijima utilities
+### File: `42/media/lua/shared/pz_lua_commons_test/test_safelogger.lua`
 
-### Running Tests
+**Style:** Module-return pattern (`return { run = run_tests }`). Part of a test runner suite. Uses SafeLogger for its own output.
 
-```bash
--- In Project Zomboid or Lua environment
-require("path/to/test_pz_utils_*.lua")
+**6 tests:**
+
+| # | Test | What it validates |
+|---|------|-------------------|
+| 1 | safeLog is a function | Type check on the wrapper |
+| 2 | handles string messages | `safeLog("Test message")` doesn't crash |
+| 3 | handles nil messages | `safeLog(nil)` doesn't crash |
+| 4 | handles number messages | `safeLog(123)` doesn't crash |
+| 5 | handles debug flag (true) | `safeLog("msg", true)` doesn't crash |
+| 6 | handles debug=false | `safeLog("msg", false)` doesn't crash |
+
+```lua
+-- Pattern: module-return style
+local function run_tests()
+    local pz_utils = require("pz_utils_shared")
+    local _logger = pz_utils.escape.SafeLogger.new("PZ_LUA_COMMONS_TEST_SAFE_LOGGER")
+    local function safeLog(msg, level)
+        _logger:log(msg, level)
+    end
+    -- ... tests using assert_equal / assert_type ...
+    return test_results
+end
+
+return { run = run_tests }
 ```
 
-### Test Coverage
+### File: `common/media/lua/shared/test_pz_utils_escape.lua`
 
-#### Escape Tests
+**Style:** Standalone (runs on require). Uses the inline test framework.
 
-- SafeLogger initialization and logging at all levels
-- Debounce creation, activation, cancellation
-- Event creation, listener management, triggering
-- SafeRequire for valid and invalid modules
-- Utilities timestamp functions
+**Test sections:**
 
-#### Konijima Tests
+| Section | Tests |
+|---------|-------|
+| **SafeLogger** | init, log with numeric levels (10–60), log with string levels (TRACE/DEBUG/INFO/WARN/ERROR/FATAL), log without level |
+| **Debounce** | Call creates instance, reset timer, IsActive, Cancel, Cancel nonexistent, CancelAll, Update returns boolean |
+| **EventManager** | createEvent, get existing event, Add listener, multiple listeners, Remove listener, Trigger listeners, SetEnabled, IsEnabled, GetListenerCount, IsExecuting, shorthand on/off, getEventInfo, getAllEventsInfo |
+| **SafeRequire** | valid module (`pz_utils/escape/utilities`), invalid module |
+| **Utilities** | GetIRLTimestamp returns number, timestamp increases |
 
-- Environment detection functions
-- Permission/admin check functions
-- Networking functions existence
-- String splitting with various delimiters
-- Player and grid utilities
-- Error handling with nil inputs
+```lua
+-- Pattern: standalone, runs immediately
+local pz_utils = require("pz_utils_shared")
+local escape = pz_utils[1] or pz_utils.escape
+
+local tests = {}
+-- ... test functions assigned to tests table ...
+
+for testName, testFunc in pairs(tests) do
+    io.write(testName .. " ... ")
+    local success, err = pcall(testFunc)
+    if success then print("OK")
+    else print("ERROR: " .. tostring(err)); testsFailed = testsFailed + 1 end
+end
+```
+
+### File: `common/media/lua/shared/test_pz_utils_konijima.lua`
+
+**Style:** Standalone (runs on require). Uses the inline test framework.
+
+**Test sections:**
+
+| Section | Tests |
+|---------|-------|
+| **Environment Detection** | IsSinglePlayer, IsSinglePlayerDebug, IsClientOnly, IsClientOrSinglePlayer, IsServerOrSinglePlayer, mutual exclusivity checks |
+| **Admin/Staff Permissions** | IsClientAdmin, IsClientStaff, admin/staff consistency in single player |
+| **String Utilities** | SplitString basic, pipe delimiter, single delimiter, no delimiter, empty string, consecutive delimiters |
+| **Square Utilities** | SquareToString format, StringToSquare parsing, roundtrip test |
+| **Client Commands** | SendClientCommand, SendServerCommandTo, SendServerCommandToAll, SendServerCommandToAllInRange (existence and parameter acceptance) |
+| **Player Utilities** | GetPlayerFromUsername, IsPlayerInRange (existence and nil handling) |
+| **Electricity** | SquareHasElectricity (existence and nil handling) |
+| **Server Info** | GetServerName (existence and return type) |
+| **Inventory** | FindAllItemInInventoryByTag existence |
+| **Moveable Objects** | GetMoveableDisplayName (existence and nil handling) |
+
+---
+
+## Test Framework
+
+Both standalone test files (`test_pz_utils_escape.lua` and `test_pz_utils_konijima.lua`) use an identical inline framework:
+
+### Assertion Functions
+
+```lua
+local function assert_equals(actual, expected, message)
+    if actual == expected then
+        testsPassed = testsPassed + 1
+        return true
+    else
+        testsFailed = testsFailed + 1
+        print("FAIL: " .. (message or "assertion") ..
+              " - expected: " .. tostring(expected) ..
+              " got: " .. tostring(actual))
+        return false
+    end
+end
+
+local function assert_true(value, message)
+    return assert_equals(value, true, message)
+end
+
+local function assert_false(value, message)
+    return assert_equals(value, false, message)
+end
+
+local function assert_type(value, expectedType, message)
+    -- compares type(value) == expectedType
+end
+
+local function assert_not_nil(value, message)
+    -- checks value ~= nil
+end
+```
+
+### Test Runner
+
+```lua
+local tests = {}
+
+tests.test_example = function()
+    -- test body
+end
+
+for testName, testFunc in pairs(tests) do
+    io.write(testName .. " ... ")
+    local success, err = pcall(testFunc)
+    if success then
+        print("OK")
+    else
+        print("ERROR: " .. tostring(err))
+        testsFailed = testsFailed + 1
+    end
+end
+
+print("Passed: " .. testsPassed)
+print("Failed: " .. testsFailed)
+print("Total:  " .. (testsPassed + testsFailed))
+```
+
+### Module-Return Style (test_safelogger.lua)
+
+The `42/` test uses a different pattern — a `run_tests` function wrapped in a module:
+
+```lua
+local function run_tests()
+    -- ... assertions stored in test_results table ...
+    return test_results
+end
+
+return { run = run_tests }
+```
+
+This allows a test runner to call `require("pz_lua_commons_test/test_safelogger").run()` and inspect the results programmatically. It also uses SafeLogger itself for output rather than `print`/`io.write`.
 
 ---
 
@@ -397,19 +499,18 @@ local function executeAdminCommand(cmdName, ...)
     if not konijima.IsClientAdmin() then
         return false
     end
-
     konijima.SendClientCommand("MyMod", cmdName, {args = {...}})
     return true
 end
 ```
 
-### Pattern 3: Distance-Based Action
+### Pattern 3: Distance-Based Broadcasting
 
 ```lua
 if konijima.IsServerOrSinglePlayer() then
     konijima.SendServerCommandToAllInRange(
         eventX, eventY, eventZ,
-        0, 50,  -- Within 50 blocks
+        0, 50,
         "MyMod", "NearbyEvent", {data = value}
     )
 end
@@ -421,7 +522,7 @@ end
 local logger = escape.SafeLogger.new("ModuleLoader")
 local myLib = escape.SafeRequire("my_lib/core", "MyLibrary")
 if myLib then
-    -- Use library
+    -- use library
 else
     logger:log("Failed to load MyLibrary", "ERROR")
 end
@@ -432,35 +533,36 @@ end
 ## Best Practices
 
 1. **Always initialize SafeLogger** with your module name
-2. **Call Debounce.Update()** every game tick in your main loop
+2. **Call `Debounce.Update()`** every game tick in your main loop
 3. **Use EventManager** for decoupled communication between systems
 4. **Check permissions** before executing admin commands
-5. **Handle nil returns** from Konijima functions (they're designed to fail gracefully)
+5. **Handle nil returns** from Konijima functions — they fail gracefully
 6. **Use distance checks** before sending server commands to reduce network traffic
-7. **Cache frequently accessed data** with proper invalidation
-8. **Validate user input** before processing commands
 
 ---
 
 ## API Reference Quick Links
 
-### Escape Utilities
+### Escape Utilities (`pz_utils.escape`)
 
-- Debounce: Rate-limiting callbacks
-- EventManager: Publish-subscribe events
-- SafeLogger: Defensive logging with levels
-- SafeRequire: Safe module loading
-- Utilities: Helper functions
+- **SafeLogger** — `.new(name)` → `:log(msg, level)`
+- **Debounce** — `.Call()`, `.Update()`, `.Cancel()`, `.CancelAll()`, `.IsActive()`
+- **EventManager** — `.createEvent()`, `.on()`, `.off()`, `.trigger()`, `.getEventInfo()`, `.getAllEventsInfo()`, `.events[name]`
+- **SafeRequire** — `(path, label)` → module or `nil`
+- **Utilities** — `.GetIRLTimestamp()`
 
-### Konijima Utilities
+### Konijima Utilities (`pz_utils.konijima.Utilities`)
 
-- Environment checks: Game mode detection
-- Permissions: Admin/staff validation
-- Networking: Client-server communication
-- Player utilities: Player lookups and range checks
-- Grid utilities: Coordinate and square operations
-- Inventory: Item searching by tag
-- Display: Object name translation
+- **Environment** — `IsSinglePlayer`, `IsSinglePlayerDebug`, `IsClientOnly`, `IsClientOrSinglePlayer`, `IsServerOrSinglePlayer`
+- **Permissions** — `IsClientAdmin`, `IsClientStaff`
+- **Strings** — `SplitString(str, delimiter)`
+- **Squares** — `SquareToString(square)`, `StringToSquare(str)`
+- **Networking** — `SendClientCommand`, `SendServerCommandTo`, `SendServerCommandToAll`, `SendServerCommandToAllInRange`
+- **Players** — `GetPlayerFromUsername`, `IsPlayerInRange`
+- **Electricity** — `SquareHasElectricity`
+- **Server** — `GetServerName`
+- **Inventory** — `FindAllItemInInventoryByTag`
+- **Display** — `GetMoveableDisplayName`
 
 ---
 
