@@ -1,7 +1,11 @@
 -- Test runner for all pz_lua_commons tests
 
 local function run_all_tests()
-	local safeLog = require("pz_lua_commons/safelogger")
+	local pz_utils = require("pz_utils_shared")
+	local _logger = pz_utils.escape.SafeLogger.new("PZ_LUA_COMMONS_TEST_RUNNER")
+	local function safeLog(msg, level)
+		_logger:log(msg, level)
+	end
 
 	safeLog("\n" .. string.rep("=", 60))
 	safeLog("PZ LUA COMMONS - TEST SUITE")
@@ -19,25 +23,25 @@ local function run_all_tests()
 	safeLog("Running: test_safelogger")
 	safeLog("-" .. string.rep("-", 58))
 	local safelogger_results = test_safelogger.run()
-	table.insert(all_results, {name = "safelogger", results = safelogger_results})
+	table.insert(all_results, { name = "safelogger", results = safelogger_results })
 
 	-- Run test_shared
 	safeLog("\n\nRunning: test_shared")
 	safeLog("-" .. string.rep("-", 58))
 	local shared_results = test_shared.run()
-	table.insert(all_results, {name = "shared", results = shared_results})
+	table.insert(all_results, { name = "shared", results = shared_results })
 
 	-- Run test_signal
 	safeLog("\n\nRunning: test_signal")
 	safeLog("-" .. string.rep("-", 58))
 	local signal_results = test_signal.run()
-	table.insert(all_results, {name = "signal", results = signal_results})
+	table.insert(all_results, { name = "signal", results = signal_results })
 
 	-- Run test_client
 	safeLog("\n\nRunning: test_client")
 	safeLog("-" .. string.rep("-", 58))
 	local client_results = test_client.run()
-	table.insert(all_results, {name = "client", results = client_results})
+	table.insert(all_results, { name = "client", results = client_results })
 
 	-- Summary
 	safeLog("\n" .. string.rep("=", 60))
@@ -50,7 +54,7 @@ local function run_all_tests()
 	for _, suite in ipairs(all_results) do
 		local passed = 0
 		local failed = 0
-		
+
 		for _, result in ipairs(suite.results) do
 			if result.passed then
 				passed = passed + 1
@@ -58,10 +62,10 @@ local function run_all_tests()
 				failed = failed + 1
 			end
 		end
-		
+
 		total_passed = total_passed + passed
 		total_failed = total_failed + failed
-		
+
 		local status = failed == 0 and "PASS" or "FAIL"
 		safeLog(string.format("%-20s: %s (%d/%d)", suite.name, status, passed, passed + failed))
 	end
@@ -80,10 +84,10 @@ local function run_all_tests()
 	return {
 		total_passed = total_passed,
 		total_failed = total_failed,
-		suites = all_results
+		suites = all_results,
 	}
 end
 
 return {
-	run = run_all_tests
+	run = run_all_tests,
 }

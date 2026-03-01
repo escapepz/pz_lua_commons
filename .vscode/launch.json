@@ -40,6 +40,14 @@
             "program": "${workspaceFolder}/TEST_SUITE/examples/example_usage.lua",
             "cwd": "${workspaceFolder}",
             "stopOnEntry": false
+        },
+        {
+            "name": "Debug pz_lua_commons_test",
+            "type": "lua",
+            "request": "launch",
+            "program": "${workspaceFolder}/TEST_SUITE/tests/run_pz_lua_commons_test.lua",
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false
         }
     ]
 }

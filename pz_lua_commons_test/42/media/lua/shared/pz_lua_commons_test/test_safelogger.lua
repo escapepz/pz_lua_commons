@@ -1,20 +1,25 @@
 -- Test suite for safelogger.lua
 
 local function run_tests()
-	local safeLog = require("pz_lua_commons/safelogger")
+	local pz_utils = require("pz_utils_shared")
+	local _logger = pz_utils.escape.SafeLogger.new("PZ_LUA_COMMONS_TEST_SAFE_LOGGER")
+	local function safeLog(msg, level)
+		_logger:log(msg, level)
+	end
+
 	local test_results = {}
 
 	-- Helper function to run tests
 	local function assert_equal(actual, expected, test_name)
 		if actual == expected then
-			table.insert(test_results, {name = test_name, passed = true})
+			table.insert(test_results, { name = test_name, passed = true })
 			return true
 		else
 			table.insert(test_results, {
 				name = test_name,
 				passed = false,
 				expected = expected,
-				actual = actual
+				actual = actual,
 			})
 			return false
 		end
@@ -22,14 +27,14 @@ local function run_tests()
 
 	local function assert_type(value, expected_type, test_name)
 		if type(value) == expected_type then
-			table.insert(test_results, {name = test_name, passed = true})
+			table.insert(test_results, { name = test_name, passed = true })
 			return true
 		else
 			table.insert(test_results, {
 				name = test_name,
 				passed = false,
 				expected_type = expected_type,
-				actual_type = type(value)
+				actual_type = type(value),
 			})
 			return false
 		end
@@ -90,5 +95,5 @@ local function run_tests()
 end
 
 return {
-	run = run_tests
+	run = run_tests,
 }

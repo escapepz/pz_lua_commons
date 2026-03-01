@@ -1,7 +1,13 @@
+---@diagnostic disable: need-check-nil
 -- Test suite for hump.signal module
 
 local function run_tests()
-	local safeLog = require("pz_lua_commons/safelogger")
+	local pz_utils = require("pz_utils_shared")
+	local _logger = pz_utils.escape.SafeLogger.new("PZ_LUA_COMMONS_TEST_SIGNAL")
+	local function safeLog(msg, level)
+		_logger:log(msg, level)
+	end
+
 	local pzc = require("pz_lua_commons_shared")
 	local signal = pzc.vrld.hump.signal
 
@@ -9,14 +15,14 @@ local function run_tests()
 
 	local function assert_equal(actual, expected, test_name)
 		if actual == expected then
-			table.insert(test_results, {name = test_name, passed = true})
+			table.insert(test_results, { name = test_name, passed = true })
 			return true
 		else
 			table.insert(test_results, {
 				name = test_name,
 				passed = false,
 				expected = expected,
-				actual = actual
+				actual = actual,
 			})
 			return false
 		end
@@ -24,14 +30,14 @@ local function run_tests()
 
 	local function assert_type(value, expected_type, test_name)
 		if type(value) == expected_type then
-			table.insert(test_results, {name = test_name, passed = true})
+			table.insert(test_results, { name = test_name, passed = true })
 			return true
 		else
 			table.insert(test_results, {
 				name = test_name,
 				passed = false,
 				expected_type = expected_type,
-				actual_type = type(value)
+				actual_type = type(value),
 			})
 			return false
 		end
@@ -69,34 +75,37 @@ local function run_tests()
 		callback_called = true
 	end
 
-	signal:register("test_event", callback)
-	signal:emit("test_event")
+	signal.register("test_event", callback)
+	signal.emit("test_event")
 	assert_equal(callback_called, true, "register/emit triggers callback")
 
 	-- Test 9: Emit with parameters
 	local received_params = {}
 	local param_callback = function(a, b, c)
-		received_params = {a, b, c}
+		received_params = { a, b, c }
 	end
 
-	signal:clear("param_event")
-	signal:register("param_event", param_callback)
-	signal:emit("param_event", 1, "hello", true)
+	signal.clear("param_event")
+	signal.register("param_event", param_callback)
+	signal.emit("param_event", 1, "hello", true)
 	assert_equal(received_params[1], 1, "emit passes first parameter correctly")
 	assert_equal(received_params[2], "hello", "emit passes second parameter correctly")
 	assert_equal(received_params[3], true, "emit passes third parameter correctly")
 
 	-- Test 10: Multiple callbacks for same event
 	local call_count = 0
-	local counter = function()
+	local counter1 = function()
+		call_count = call_count + 1
+	end
+	local counter2 = function()
 		call_count = call_count + 1
 	end
 
-	signal:clear("multi_event")
-	signal:register("multi_event", counter)
-	signal:register("multi_event", counter)
-	signal:emit("multi_event")
-	assert_equal(call_count, 2, "multiple callbacks are all called")
+	signal.clear("multi_event")
+	signal.register("multi_event", counter1)
+	signal.register("multi_event", counter2)
+	signal.emit("multi_event")
+	assert_equal(call_count, 2, "multiple distinct callbacks are all called")
 
 	-- Test 11: Remove callback
 	local removable_called = false
@@ -104,10 +113,10 @@ local function run_tests()
 		removable_called = true
 	end
 
-	signal:clear("remove_event")
-	signal:register("remove_event", removable_callback)
-	signal:remove("remove_event", removable_callback)
-	signal:emit("remove_event")
+	signal.clear("remove_event")
+	signal.register("remove_event", removable_callback)
+	signal.remove("remove_event", removable_callback)
+	signal.emit("remove_event")
 	assert_equal(removable_called, false, "removed callback is not called")
 
 	-- Test 12: Clear event
@@ -116,10 +125,10 @@ local function run_tests()
 		clear_called = true
 	end
 
-	signal:clear("clear_event")
-	signal:register("clear_event", clear_callback)
-	signal:clear("clear_event")
-	signal:emit("clear_event")
+	signal.clear("clear_event")
+	signal.register("clear_event", clear_callback)
+	signal.clear("clear_event")
+	signal.emit("clear_event")
 	assert_equal(clear_called, false, "cleared callbacks are not called")
 
 	-- Test 13: Pattern registration
@@ -128,10 +137,10 @@ local function run_tests()
 		pattern_called = true
 	end
 
-	signal:clear("foo_event")
-	signal:clear("foo_bar")
-	signal:registerPattern("foo.*", pattern_callback)
-	signal:emit("foo_event")
+	signal.clear("foo_event")
+	signal.clear("foo_bar")
+	signal.registerPattern("foo.*", pattern_callback)
+	signal.emit("foo_event")
 	assert_equal(pattern_called, true, "pattern registration registers matching events")
 
 	-- Test 14: Pattern emit
@@ -140,9 +149,9 @@ local function run_tests()
 		pattern_emit_called = true
 	end
 
-	signal:clear("bar_event")
-	signal:registerPattern("bar.*", pattern_emit_callback)
-	signal:emitPattern("bar.*")
+	signal.clear("bar_event")
+	signal.registerPattern("bar.*", pattern_emit_callback)
+	signal.emitPattern("bar.*")
 	assert_equal(pattern_emit_called, true, "emitPattern triggers pattern-matched callbacks")
 
 	-- Test 15: New instance creation
@@ -191,5 +200,5 @@ local function run_tests()
 end
 
 return {
-	run = run_tests
+	run = run_tests,
 }

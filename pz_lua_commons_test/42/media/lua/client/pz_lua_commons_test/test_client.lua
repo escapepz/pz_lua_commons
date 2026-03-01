@@ -1,21 +1,27 @@
+---@diagnostic disable: need-check-nil
 -- Test suite for client.lua modules
 
 local function run_tests()
-	local safeLog = require("pz_lua_commons/safelogger")
+	local pz_utils = require("pz_utils_shared")
+	local _logger = pz_utils.escape.SafeLogger.new("PZ_LUA_COMMONS_TEST_CLIENT")
+	local function safeLog(msg, level)
+		_logger:log(msg, level)
+	end
+
 	local pzc = require("pz_lua_commons_client")
 
 	local test_results = {}
 
 	local function assert_equal(actual, expected, test_name)
 		if actual == expected then
-			table.insert(test_results, {name = test_name, passed = true})
+			table.insert(test_results, { name = test_name, passed = true })
 			return true
 		else
 			table.insert(test_results, {
 				name = test_name,
 				passed = false,
 				expected = expected,
-				actual = actual
+				actual = actual,
 			})
 			return false
 		end
@@ -23,14 +29,14 @@ local function run_tests()
 
 	local function assert_type(value, expected_type, test_name)
 		if type(value) == expected_type then
-			table.insert(test_results, {name = test_name, passed = true})
+			table.insert(test_results, { name = test_name, passed = true })
 			return true
 		else
 			table.insert(test_results, {
 				name = test_name,
 				passed = false,
 				expected_type = expected_type,
-				actual_type = type(value)
+				actual_type = type(value),
 			})
 			return false
 		end
@@ -51,30 +57,30 @@ local function run_tests()
 	-- Test 5: inspectlua is available in kikito
 	if pzc.kikito.inspectlua then
 		assert_type(pzc.kikito.inspectlua, "table", "inspectlua is available and is a table")
-		
+
 		-- Test 5a: inspectlua has inspect method
 		if pzc.kikito.inspectlua.inspect then
 			assert_type(pzc.kikito.inspectlua.inspect, "function", "inspectlua has inspect method")
 		elseif type(pzc.kikito.inspectlua) == "function" then
-			table.insert(test_results, {name = "inspectlua is callable", passed = true})
+			table.insert(test_results, { name = "inspectlua is callable", passed = true })
 		end
 	else
 		table.insert(test_results, {
 			name = "inspectlua is available (optional)",
 			passed = false,
-			note = "inspectlua not available - check installation"
+			note = "inspectlua not available - check installation",
 		})
 	end
 
 	-- Test 6: serpent is available in pkulchenko
 	if pzc.pkulchenko.serpent then
 		assert_type(pzc.pkulchenko.serpent, "table", "serpent is available and is a table")
-		
+
 		-- Test 6a: serpent has dump method
 		if pzc.pkulchenko.serpent.dump then
 			assert_type(pzc.pkulchenko.serpent.dump, "function", "serpent has dump method")
 		end
-		
+
 		-- Test 6b: serpent has load method
 		if pzc.pkulchenko.serpent.load then
 			assert_type(pzc.pkulchenko.serpent.load, "function", "serpent has load method")
@@ -83,23 +89,23 @@ local function run_tests()
 		table.insert(test_results, {
 			name = "serpent is available (optional)",
 			passed = false,
-			note = "serpent not available - check installation"
+			note = "serpent not available - check installation",
 		})
 	end
 
 	-- Test 7: yon_30log is available in yonaba
 	if pzc.yonaba.yon_30log then
-		assert_type(pzc.yonaba.yon_30log, "table", "yon_30log is available and is a table")
-		
-		-- Test 7a: yon_30log has new method
-		if pzc.yonaba.yon_30log.new then
-			assert_type(pzc.yonaba.yon_30log.new, "function", "yon_30log has new method")
+		assert_type(pzc.yonaba.yon_30log, "table", "yon_30log is available (OOP library)")
+
+		-- Test 7a: yon_30log has isClass method
+		if pzc.yonaba.yon_30log.isClass then
+			assert_type(pzc.yonaba.yon_30log.isClass, "function", "yon_30log has isClass method")
 		end
 	else
 		table.insert(test_results, {
 			name = "yon_30log is available (optional)",
 			passed = false,
-			note = "yon_30log not available - check installation"
+			note = "yon_30log not available - check installation",
 		})
 	end
 
@@ -107,15 +113,15 @@ local function run_tests()
 	if pzc.kikito.inspectlua then
 		local inspect = pzc.kikito.inspectlua
 		local success = pcall(function()
-			local test_table = {a = 1, b = 2, c = {nested = true}}
+			local test_table = { a = 1, b = 2, c = { nested = true } }
 			local result = inspect(test_table)
 			assert_type(result, "string", "inspectlua returns a string representation")
 		end)
-		
+
 		if not success then
 			table.insert(test_results, {
 				name = "inspectlua can inspect tables",
-				passed = false
+				passed = false,
 			})
 		end
 	end
@@ -124,31 +130,34 @@ local function run_tests()
 	if pzc.pkulchenko.serpent then
 		local serpent = pzc.pkulchenko.serpent
 		local success = pcall(function()
-			local test_table = {x = 10, y = 20}
+			local test_table = { x = 10, y = 20 }
 			local dumped = serpent.dump(test_table)
 			assert_type(dumped, "string", "serpent.dump returns a string")
 		end)
-		
+
 		if not success then
 			table.insert(test_results, {
 				name = "serpent dump works",
-				passed = false
+				passed = false,
 			})
 		end
 	end
 
-	-- Test 10: Test yon_30log logger creation if available
+	-- Test 10: Test yon_30log class creation and instantiation if available
 	if pzc.yonaba.yon_30log then
-		local log = pzc.yonaba.yon_30log
+		local _30log = pzc.yonaba.yon_30log
 		local success = pcall(function()
-			local logger = log.new("test_logger")
-			assert_type(logger, "table", "yon_30log.new creates a logger table")
+			local MyClass = _30log("MyClass")
+			assert_equal(_30log.isClass(MyClass), true, "yon_30log can create a class")
+
+			local instance = MyClass:new()
+			assert_equal(_30log.isInstance(instance), true, "yon_30log can create an instance")
 		end)
-		
+
 		if not success then
 			table.insert(test_results, {
-				name = "yon_30log can create loggers",
-				passed = false
+				name = "yon_30log class creation and instantiation works",
+				passed = false,
 			})
 		end
 	end
@@ -175,5 +184,5 @@ local function run_tests()
 end
 
 return {
-	run = run_tests
+	run = run_tests,
 }
