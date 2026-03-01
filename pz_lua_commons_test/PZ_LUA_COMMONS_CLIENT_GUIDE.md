@@ -5,208 +5,137 @@ Complete reference for the **Client** module of `pz_lua_commons`, which provides
 ## Quick Start
 
 ```lua
--- Client-side only (will not load on server)
-if isServer() then return end
+local pz_utils = require("pz_utils_shared")
+local _logger = pz_utils.escape.SafeLogger.new("MY_MOD")
 
-local pz_commons = require("pz_lua_commons/client")
+local pzc = require("pz_lua_commons_client")
 
 -- Access each library
-local inspect = pz_commons.kikito.inspectlua
-local serpent = pz_commons.pkulchenko.serpent
-local yon30log = pz_commons.yonaba.yon_30log
+local inspect   = pzc.kikito.inspectlua      -- callable: inspect(table) → string
+local serpent   = pzc.pkulchenko.serpent      -- serpent.dump(), serpent.load()
+local _30log    = pzc.yonaba.yon_30log        -- _30log("ClassName") → class
 ```
 
 ## Important: Client-Only Module
 
-This module **only loads on client-side**. It includes the following guard:
+This module **only loads on client-side**. The libraries will be `nil` on a dedicated server. Always guard usage:
 
 ```lua
-if not isServer() then
-    -- Libraries load here
-end
-```
-
-This means the module is safe to require, but libraries will be `nil` on server. Always check:
-
-```lua
-if inspect then
-    -- Use inspect safely
+if pzc.kikito.inspectlua then
+    -- safe to use
 end
 ```
 
 ## Table of Contents
 
-1. [Available Libraries](#available-libraries)
-2. [inspectlua (Kikito)](#inspectlua-kikito)
-3. [serpent (pkulchenko)](#serpent-pkulchenko)
-4. [30log (yonaba)](#30log-yonaba)
-5. [Practical Examples](#practical-examples)
-6. [Best Practices](#best-practices)
+1. [Project Structure](#project-structure)
+2. [Available Libraries](#available-libraries)
+3. [inspectlua (Kikito)](#inspectlua-kikito)
+4. [serpent (pkulchenko)](#serpent-pkulchenko)
+5. [30log (yonaba)](#30log-yonaba)
+6. [Test Suite Reference](#test-suite-reference)
+7. [Test Runner Pattern](#test-runner-pattern)
+8. [Best Practices](#best-practices)
+9. [Troubleshooting](#troubleshooting)
+
+---
+
+## Project Structure
+
+The `pz_lua_commons_test` mod validates the client module. Its file layout:
+
+```
+pz_lua_commons_test/
+├── 42/
+│   ├── mod.info
+│   └── media/lua/client/pz_lua_commons_test/
+│       ├── client.lua          -- Entry point: loads pzc, smoke-tests inspectlua
+│       └── test_client.lua     -- Full test suite (10 tests)
+├── PZ_LUA_COMMONS_CLIENT_GUIDE.md   (this file)
+├── PZ_LUA_COMMONS_COMPLETE_GUIDE.md
+├── PZ_LUA_COMMONS_SHARED_GUIDE.md
+└── PZ_UTILS_GUIDE.md
+```
+
+### mod.info
+
+```ini
+id=pz_lua_commons_test
+name=PZLuaCommons Test
+poster=poster.png
+icon=icon.png
+require=\pz_lua_commons
+```
+
+The `require=\pz_lua_commons` line declares a hard dependency so the commons libraries are loaded first.
 
 ---
 
 ## Available Libraries
 
-| Library | Author | Purpose | Type |
-|---------|--------|---------|------|
-| **inspectlua** | Kikito | Table inspection and debugging | Debug |
-| **serpent** | pkulchenko | Data serialization | Serialization |
-| **30log** | yonaba | Object-oriented programming | OOP |
+| Library | Namespace | Author | Purpose | Type |
+|---------|-----------|--------|---------|------|
+| **inspectlua** | `pzc.kikito.inspectlua` | Kikito | Table inspection / debugging | Debug |
+| **serpent** | `pzc.pkulchenko.serpent` | pkulchenko | Data serialization | Serialization |
+| **30log** | `pzc.yonaba.yon_30log` | yonaba | Object-oriented programming | OOP |
 
 ---
 
 ## inspectlua (Kikito)
 
-Advanced table inspection tool for debugging. Pretty-prints Lua tables with formatting and depth control.
+Pretty-prints any Lua value into a human-readable string. The module itself is callable.
 
-### Functions
+### Access
 
-| Function | Parameters | Returns | Description |
-|----------|-----------|---------|-------------|
-| `inspect` | `obj: any, options: table\|nil` | `string` | Return formatted string representation |
+```lua
+local pzc = require("pz_lua_commons_client")
+local inspect = pzc.kikito.inspectlua   -- callable table
+```
+
+### API
+
+| Call | Parameters | Returns | Description |
+|------|-----------|---------|-------------|
+| `inspect(obj)` | `obj: any` | `string` | Formatted string representation |
+| `inspect(obj, opts)` | `obj: any, opts: table` | `string` | With formatting options |
 
 ### Basic Usage
 
 ```lua
-local inspect = pz_commons.kikito.inspectlua
-
-if not inspect then
-    print("inspectlua not available (server context?)")
-    return
-end
-
-local player_data = {
-    name = "Alice",
-    health = 95,
-    inventory = {"sword", "shield", "potion"}
-}
-
-print(inspect(player_data))
-```
-
-### Output Example
-
-```
-{
-  health = 95,
-  inventory = {
-    1 = "sword",
-    2 = "shield",
-    3 = "potion"
-  },
-  name = "Alice"
-}
+local test_table = { a = 1, b = 2, c = { nested = true } }
+local result = inspect(test_table)   -- returns a string
+print(result)
 ```
 
 ### Options
 
 ```lua
--- Limit depth of nested tables
-inspect(player_data, {depth = 1})
-
--- Custom newline
-inspect(player_data, {newline = "\n"})
+-- Limit inspection depth
+inspect(data, { depth = 1 })
 
 -- Custom indent
-inspect(player_data, {indent = "  "})
+inspect(data, { indent = "    " })
 
--- Combine options
-local formatted = inspect(player_data, {
-    depth = 2,
-    indent = "    ",
-    newline = "\n"
-})
+-- Custom newline
+inspect(data, { newline = "\n" })
 ```
 
-### Debugging Examples
+### Debugging Example
 
 ```lua
--- Inspect a table
-local my_table = {a = 1, b = {c = 2, d = 3}}
-print(inspect(my_table))
+local pz_utils = require("pz_utils_shared")
+local _logger = pz_utils.escape.SafeLogger.new("MY_MOD")
 
--- Inspect function behavior
-local function process_data(data)
-    print("Received:")
-    print(inspect(data))
-    return data.value * 2
-end
+local pzc = require("pz_lua_commons_client")
+local inspect = pzc.kikito.inspectlua
 
-process_data({value = 42, extra = "info"})
-
--- Compare two structures
-local expected = {x = 1, y = 2}
-local actual = {x = 1, y = 3}
-
-print("Expected: " .. inspect(expected))
-print("Actual: " .. inspect(actual))
-
--- Dump function result
-local result = some_function()
-if type(result) == "table" then
-    print("Function returned: " .. inspect(result))
-end
-```
-
-### Practical Use Cases
-
-```lua
--- Debug player state
-local player = getPlayer()
-if player then
-    print("Player state:")
-    print(inspect({
-        name = player:getUsername(),
-        health = player:getHealth(),
-        stamina = player:getStamina()
-    }))
-end
-
--- Debug inventory
-local inventory = player:getInventory()
-if inventory then
-    print("Inventory contents:")
-    print(inspect({
-        size = inventory:getSize(),
-        item_count = inventory:getItemCount()
-    }))
-end
-
--- Debug game state
-print("Game snapshot:")
-print(inspect({
-    time = os.time(),
-    paused = isPaused(),
-    debug = isDebugEnabled()
-}))
-```
-
-### Advanced Debugging
-
-```lua
--- Create debug helper
-local function debug_table(name, tbl, depth)
-    depth = depth or 2
-    print("\n=== " .. name .. " ===")
-    print(inspect(tbl, {depth = depth}))
-    print("Type: " .. type(tbl))
-    if type(tbl) == "table" then
-        print("Size: " .. #tbl)
-    end
-end
-
--- Usage
-debug_table("Player Data", player_data, 3)
-
--- Compare values
-local function assert_table_equals(expected, actual, name)
-    if inspect(expected) ~= inspect(actual) then
-        print("MISMATCH in " .. name)
-        print("Expected: " .. inspect(expected))
-        print("Actual: " .. inspect(actual))
-        return false
-    end
-    return true
+if inspect then
+    local player_data = {
+        name = "Alice",
+        health = 95,
+        inventory = { "sword", "shield", "potion" },
+    }
+    _logger:log(inspect(player_data))
 end
 ```
 
@@ -214,718 +143,398 @@ end
 
 ## serpent (pkulchenko)
 
-Powerful serialization library for converting Lua values to human-readable strings and back.
+Serialization library for converting Lua values to string representation and back.
 
-### Functions
+### Access
+
+```lua
+local pzc = require("pz_lua_commons_client")
+local serpent = pzc.pkulchenko.serpent
+```
+
+### API
 
 | Function | Parameters | Returns | Description |
 |----------|-----------|---------|-------------|
-| `dump` | `obj: any, options: table\|nil` | `string` | Serialize to string |
-| `load` | `str: string` | `function` | Load serialized data |
-| `line` | `obj: any, options: table\|nil` | `string` | One-line serialization |
+| `serpent.dump(obj)` | `obj: any` | `string` | Serialize to loadable Lua string |
+| `serpent.load(str)` | `str: string` | `ok, value` | Deserialize from string |
+| `serpent.line(obj)` | `obj: any` | `string` | One-line serialization |
 
-### Basic Serialization
+### Basic Usage
 
 ```lua
-local serpent = pz_commons.pkulchenko.serpent
+local data = { x = 10, y = 20 }
 
-if not serpent then
-    print("serpent not available")
-    return
+-- Serialize
+local dumped = serpent.dump(data)   -- returns a string
+print(type(dumped))                 -- "string"
+
+-- Deserialize
+local ok, restored = serpent.load(dumped)
+if ok then
+    print(restored.x, restored.y)   -- 10  20
 end
-
--- Dump: Serialize to readable format
-local data = {
-    player = "Alice",
-    level = 50,
-    stats = {strength = 18, dexterity = 15}
-}
-
-local serialized = serpent.dump(data)
-print(serialized)
 ```
 
-### Output Example
+### Save / Load Configuration
 
 ```lua
-{
-  level = 50,
-  player = "Alice",
-  stats = {
-    dexterity = 15,
-    strength = 18
-  }
-}
-```
+-- Save
+local config = { version = "1.0", debug = true, max_items = 64 }
+local file = io.open("config.lua", "w")
+file:write(serpent.dump(config))
+file:close()
 
-### Loading Data
-
-```lua
--- Load: Convert string back to Lua value
-local serialized = serpent.dump(data)
-
--- Get as a function
-local loaded_fn = serpent.load(serialized)
-local restored = loaded_fn()  -- Call the function to get the value
-
-print(restored.player)  -- "Alice"
-print(restored.level)   -- 50
-```
-
-### Options
-
-```lua
--- Compact format (single line)
-local compact = serpent.line(data)
-print(compact)
-
--- Custom comment handling
-local with_comments = serpent.dump(data, {
-    comment = true,
-    sortkeys = true
-})
-```
-
-### Complex Data Serialization
-
-```lua
--- Nested structures
-local complex = {
-    name = "World",
-    regions = {
-        {id = 1, name = "Forest", difficulty = "easy"},
-        {id = 2, name = "Dungeon", difficulty = "hard"}
-    },
-    settings = {
-        version = "1.0",
-        enabled = true,
-        config = {
-            max_players = 4,
-            timeout = 300
-        }
-    }
-}
-
-local serialized = serpent.dump(complex)
-print(serialized)
-
--- Restore from serialized
-local restored = serpent.load(serialized)()
-print("Restored first region: " .. restored.regions[1].name)
-```
-
-### Comparison: JSON vs Serpent
-
-```lua
--- JSON (lunajson) - standard format, universal
-local json = lunajson.encode(data)
--- Result: {"name":"Alice","level":50,...}
-
--- Serpent - Lua-native, more expressive
-local serpent_str = serpent.dump(data)
--- Result: {name = "Alice", level = 50, ...}
-
--- Use JSON for:
--- - Network communication
--- - Cross-language compatibility
--- - Standard data interchange
-
--- Use Serpent for:
--- - Lua-only data persistence
--- - Readable config files
--- - Debug output
-```
-
-### File I/O with Serpent
-
-```lua
--- Save to file
-local function save_data(filepath, data)
-    local file = io.open(filepath, "w")
-    if not file then
-        print("Failed to open file: " .. filepath)
-        return false
-    end
-    
-    file:write(serpent.dump(data))
-    file:close()
-    return true
-end
-
--- Load from file
-local function load_data(filepath)
-    local file = io.open(filepath, "r")
-    if not file then
-        print("File not found: " .. filepath)
-        return nil
-    end
-    
-    local content = file:read("*all")
-    file:close()
-    
-    local success, result = pcall(function()
-        return serpent.load(content)()
-    end)
-    
-    return success and result or nil
-end
-
--- Usage
-local player_data = {name = "Alice", level = 50}
-save_data("player.lua", player_data)
-
-local restored = load_data("player.lua")
-print(inspect(restored))
-```
-
-### Practical Use Cases
-
-```lua
--- Configuration files
-local config = {
-    mod_version = "1.0",
-    debug_mode = true,
-    features = {
-        enable_logging = true,
-        enable_ui = true,
-        max_concurrent = 10
-    }
-}
-
--- Save config
-save_data("config.lua", config)
-
--- Game state snapshot
-local game_state = {
-    timestamp = os.time(),
-    players = {
-        {name = "Alice", health = 100, x = 100, y = 200},
-        {name = "Bob", health = 75, x = 150, y = 200}
-    },
-    world = {
-        difficulty = "normal",
-        biome = "forest"
-    }
-}
-
-local state_str = serpent.dump(game_state)
-print(state_str)
+-- Load
+local file = io.open("config.lua", "r")
+local content = file:read("*a")
+file:close()
+local ok, loaded_config = serpent.load(content)
 ```
 
 ---
 
 ## 30log (yonaba)
 
-Ultra-lightweight OOP framework for Lua ("30 Lines Of Goodness"). Provides classes, inheritance, and mixins in a minimal, elegant implementation.
+Minimal OOP library — "30 Lines Of Goodness". Creates classes with inheritance.
 
-### Basic Class Definition
+### Access
 
 ```lua
-local yon30log = pz_commons.yonaba.yon_30log
+local pzc = require("pz_lua_commons_client")
+local _30log = pzc.yonaba.yon_30log
+```
 
-if not yon30log then
-    print("30log not available")
-    return
-end
+### API
 
--- Create a class
-local Player = yon30log("Player")
+| Function | Parameters | Returns | Description |
+|----------|-----------|---------|-------------|
+| `_30log("Name")` | `name: string` | `class` | Create a new class |
+| `_30log.isClass(obj)` | `obj: any` | `boolean` | Check if value is a class |
+| `_30log.isInstance(obj)` | `obj: any` | `boolean` | Check if value is an instance |
+| `MyClass:new(...)` | variadic | `instance` | Instantiate a class |
+| `instance:instanceOf(cls)` | `cls: class` | `boolean` | Check instance's class |
 
-function Player:initialize(name, level)
+### Basic Usage
+
+```lua
+local MyClass = _30log("MyClass")
+
+function MyClass:initialize(name)
     self.name = name
-    self.level = level
-    self.health = 100
 end
 
-function Player:take_damage(amount)
-    self.health = self.health - amount
-    print(self.name .. " took " .. amount .. " damage")
+function MyClass:greet()
+    return "Hello, I am " .. self.name
 end
 
--- Create instance
-local player = Player:new("Alice", 50)
-player:take_damage(25)
+local obj = MyClass:new("Guard")
+print(obj:greet())                    -- "Hello, I am Guard"
+print(_30log.isClass(MyClass))        -- true
+print(_30log.isInstance(obj))          -- true
+print(obj:instanceOf(MyClass))        -- true
 ```
 
 ### Inheritance
 
 ```lua
-local Character = yon30log("Character")
-
-function Character:initialize(name)
+local Animal = _30log("Animal")
+function Animal:initialize(name)
     self.name = name
-    self.health = 100
 end
 
--- Subclass using extend()
-local Knight = Character:extend("Knight")
-
-function Knight:initialize(name, armor)
-    Character.initialize(self, name)
-    self.armor = armor
-    self.defense = 15
+local Dog = Animal:extend("Dog")
+function Dog:bark()
+    return self.name .. " says woof!"
 end
 
-function Knight:take_damage(amount)
-    local reduced = math.max(1, amount - self.defense)
-    self.health = self.health - reduced
-end
-
--- Usage
-local knight = Knight:new("Aragorn", "plate")
-knight:take_damage(20)
-```
-
-### Simple and Elegant
-
-30log achieves full OOP functionality in minimal code:
-
-```lua
-local Player = yon30log("Player")
-
-function Player:initialize(name)
-    self.name = name
-    self.level = 1
-end
-
-function Player:level_up()
-    self.level = self.level + 1
-    print(self.name .. " reached level " .. self.level)
-end
-
-function Player:get_info()
-    return {name = self.name, level = self.level}
-end
-
--- Create and use
-local hero = Player:new("Alice")
-hero:level_up()
-```
-
-30log's strength is its compact, elegant implementation - about 30 lines of code providing full OOP.
-
-### Mixins and Composition
-
-```lua
--- Define mixins
-local Damageable = {}
-function Damageable:take_damage(amount)
-    self.health = self.health - amount
-end
-
-local Healable = {}
-function Healable:heal(amount)
-    self.health = math.min(100, self.health + amount)
-end
-
--- Create class with mixins using with()
-local Player = yon30log("Player")
-Player:with(Damageable)
-Player:with(Healable)
-
-function Player:initialize(name)
-    self.name = name
-    self.health = 100
-end
-
--- Usage
-local player = Player:new("Alice")
-player:take_damage(25)
-player:heal(10)
-```
-
-### Comparison with middleclass
-
-```lua
--- middleclass (from shared module)
-local MiddlePlayer = middleclass('Player')
-function MiddlePlayer:initialize(name) end
-
--- 30log (from client module)
-local Log30Player = yon30log("Player")
-function Log30Player:initialize(name) end
-
--- Use middleclass for:
--- - Shared code (server + client)
--- - Full-featured OOP
--- - Core game logic
-
--- Use 30log for:
--- - Client-side code
--- - Compact OOP ("30 Lines Of Goodness")
--- - Simple class hierarchies
-```
-
-### Type Checking and Instance Management
-
-```lua
-local Enemy = yon30log("Enemy")
-
-function Enemy:initialize(name, type)
-    self.name = name
-    self.type = type
-    self.health = 50
-end
-
--- Create instances
-local zombie = Enemy:new("Zombie", "undead")
-local skeleton = Enemy:new("Skeleton", "undead")
-
--- Type checking with instanceOf()
-if zombie:instanceOf(Enemy) then
-    print("Zombie is an Enemy instance")
-end
-
--- Get all instances of a class
-local all_enemies = Enemy:instances()
-print("Total enemies: " .. #all_enemies)
-
--- Check if something is a class
-if yon30log.isClass(Enemy) then
-    print("Enemy is a valid class")
-end
-
--- Check if something is an instance
-if yon30log.isInstance(zombie) then
-    print("Zombie is an instance")
-end
+local d = Dog:new("Rex")
+print(d:bark())                       -- "Rex says woof!"
+print(d:instanceOf(Animal))           -- true
 ```
 
 ---
 
-## Practical Examples
+## Test Suite Reference
 
-### Example 1: Debug Helper Module
+The test suite lives in `42/media/lua/client/pz_lua_commons_test/test_client.lua` and validates every library exposed by the client module.
+
+### Entry Point — `client.lua`
+
+`42/media/lua/client/pz_lua_commons_test/client.lua` is the mod's entry point. It:
+
+1. Requires `pz_utils_shared` and creates a `SafeLogger`
+2. Requires `pz_lua_commons_client` into `pzc`
+3. Logs a load confirmation
+4. Smoke-tests `pzc.kikito.inspectlua` availability
 
 ```lua
-local pz_commons = require("pz_lua_commons/client")
-local inspect = pz_commons.kikito.inspectlua
-
-if not inspect then
-    error("inspectlua required for debug helpers")
+local pz_utils = require("pz_utils_shared")
+local _logger = pz_utils.escape.SafeLogger.new("PZ_LUA_COMMONS_TEST_CLIENT")
+local function safeLog(msg, level)
+    _logger:log(msg, level)
 end
 
-local Debug = {}
+local pzc = require("pz_lua_commons_client")
 
-function Debug.log_table(name, tbl, depth)
-    depth = depth or 2
-    print("\n[DEBUG] " .. name)
-    print(inspect(tbl, {depth = depth}))
+safeLog("Client: Loaded")
+
+if pzc.kikito.inspectlua then
+    safeLog("TEST use inspectlua")
 end
-
-function Debug.log_player(player)
-    if not player then return end
-    Debug.log_table("Player", {
-        name = player:getUsername(),
-        health = player:getHealth(),
-        x = player:getX(),
-        y = player:getY(),
-        z = player:getZ()
-    }, 1)
-end
-
-function Debug.log_inventory(inventory)
-    if not inventory then return end
-    Debug.log_table("Inventory", {
-        size = inventory:getSize(),
-        count = inventory:getItemCount()
-    }, 1)
-end
-
-return Debug
 ```
 
-### Example 2: Configuration Manager
+### Full Test Suite — `test_client.lua`
+
+The file exports `{ run = run_tests }`. The `run_tests` function executes 10 tests organized into structural checks and functional checks.
+
+#### Structural Tests (Tests 1–4)
+
+| Test | Assertion | What it validates |
+|------|-----------|-------------------|
+| 1 | `assert_type(pzc, "table", ...)` | `pzc` loaded correctly |
+| 2 | `assert_type(pzc.kikito, "table", ...)` | `kikito` namespace exists |
+| 3 | `assert_type(pzc.pkulchenko, "table", ...)` | `pkulchenko` namespace exists |
+| 4 | `assert_type(pzc.yonaba, "table", ...)` | `yonaba` namespace exists |
+
+#### Library Availability Tests (Tests 5–7)
+
+| Test | What it validates |
+|------|-------------------|
+| 5 | `pzc.kikito.inspectlua` is a table; checks for `.inspect` function or callable table |
+| 6 | `pzc.pkulchenko.serpent` is a table; has `.dump` (function) and `.load` (function) |
+| 7 | `pzc.yonaba.yon_30log` is a table; has `.isClass` (function) |
+
+#### Functional Tests (Tests 8–10)
+
+| Test | What it validates |
+|------|-------------------|
+| 8 | `inspect({ a = 1, b = 2, c = { nested = true } })` returns a `string` |
+| 9 | `serpent.dump({ x = 10, y = 20 })` returns a `string` |
+| 10 | `_30log("MyClass")` creates a class (`isClass` → true), `MyClass:new()` creates an instance (`isInstance` → true) |
+
+Each functional test is wrapped in `pcall` so a failure in one library does not abort the suite.
+
+### Module Export
 
 ```lua
-local pz_commons = require("pz_lua_commons/client")
-local serpent = pz_commons.pkulchenko.serpent
+return {
+    run = run_tests,
+}
+```
 
-if not serpent then
-    error("serpent required for config manager")
-end
+---
 
-local ConfigManager = {}
-ConfigManager.filepath = "modconfig.lua"
+## Test Runner Pattern
 
-function ConfigManager:load()
-    local file = io.open(self.filepath, "r")
-    if not file then
-        return {}
-    end
-    
-    local content = file:read("*all")
-    file:close()
-    
-    local success, result = pcall(function()
-        return serpent.load(content)()
-    end)
-    
-    return success and result or {}
-end
+The test suite defines two assertion helpers and a results-collection pattern that can be reused in your own test modules.
 
-function ConfigManager:save(config)
-    local file = io.open(self.filepath, "w")
-    if not file then
-        print("Failed to save config")
+### `assert_equal(actual, expected, test_name)`
+
+Compares two values with `==`. Records pass/fail into `test_results`.
+
+```lua
+local function assert_equal(actual, expected, test_name)
+    if actual == expected then
+        table.insert(test_results, { name = test_name, passed = true })
+        return true
+    else
+        table.insert(test_results, {
+            name = test_name,
+            passed = false,
+            expected = expected,
+            actual = actual,
+        })
         return false
     end
-    
-    file:write(serpent.dump(config))
-    file:close()
-    return true
 end
-
-function ConfigManager:get(key, default)
-    local config = self:load()
-    return config[key] or default
-end
-
-return ConfigManager
 ```
 
-### Example 3: Entity Management with 30log
+### `assert_type(value, expected_type, test_name)`
+
+Checks `type(value) == expected_type`. Records pass/fail with the actual type on failure.
 
 ```lua
-local pz_commons = require("pz_lua_commons/client")
-local yon30log = pz_commons.yonaba.yon_30log
-
-if not yon30log then
-    error("30log required for entity management")
-end
-
-local Entity = yon30log("Entity")
-
-function Entity:initialize(name, x, y, z)
-    self.name = name
-    self.x = x
-    self.y = y
-    self.z = z
-    self.active = true
-    print("Entity spawned at (" .. x .. ", " .. y .. ", " .. z .. ")")
-end
-
-function Entity:move_to(x, y, z)
-    self.x = x
-    self.y = y
-    self.z = z
-    print(self.name .. " moved to (" .. x .. ", " .. y .. ", " .. z .. ")")
-end
-
-function Entity:destroy()
-    self.active = false
-    print("Entity destroyed: " .. self.name)
-end
-
--- Usage
-local entity = Entity:new("NPC", 100, 200, 0)
-entity:move_to(110, 210, 0)
-entity:destroy()
-```
-
-### Example 4: Combined Debug and Serialization
-
-```lua
-local pz_commons = require("pz_lua_commons/client")
-local inspect = pz_commons.kikito.inspectlua
-local serpent = pz_commons.pkulchenko.serpent
-
-if not inspect or not serpent then
-    error("Both inspectlua and serpent required")
-end
-
-local GameDebugger = {}
-
-function GameDebugger.snapshot(name)
-    local snap = {
-        timestamp = os.time(),
-        paused = isPaused(),
-        debug = isDebugEnabled()
-    }
-    
-    print("\n[SNAPSHOT] " .. name)
-    print(inspect(snap))
-    
-    return snap
-end
-
-function GameDebugger.save_snapshot(filename, snap)
-    local file = io.open(filename, "w")
-    if file then
-        file:write(serpent.dump(snap))
-        file:close()
+local function assert_type(value, expected_type, test_name)
+    if type(value) == expected_type then
+        table.insert(test_results, { name = test_name, passed = true })
         return true
+    else
+        table.insert(test_results, {
+            name = test_name,
+            passed = false,
+            expected_type = expected_type,
+            actual_type = type(value),
+        })
+        return false
     end
-    return false
 end
+```
 
-function GameDebugger.compare_snapshots(snap1, snap2)
-    print("\n[COMPARISON]")
-    print("Snapshot 1:")
-    print(inspect(snap1, {depth = 1}))
-    print("\nSnapshot 2:")
-    print(inspect(snap2, {depth = 1}))
+### `pcall` Wrapping for Functional Tests
+
+Each functional test is wrapped so errors are caught without aborting:
+
+```lua
+local success = pcall(function()
+    local test_table = { a = 1, b = 2, c = { nested = true } }
+    local result = inspect(test_table)
+    assert_type(result, "string", "inspectlua returns a string representation")
+end)
+
+if not success then
+    table.insert(test_results, {
+        name = "inspectlua can inspect tables",
+        passed = false,
+    })
 end
+```
 
-return GameDebugger
+### Results Reporting
+
+After all tests run, results are logged with pass/fail counts:
+
+```lua
+safeLog("\n=== Client Modules Test Results ===")
+local passed = 0
+local failed = 0
+for _, result in ipairs(test_results) do
+    if result.passed then
+        safeLog("✓ " .. result.name)
+        passed = passed + 1
+    else
+        safeLog("✗ " .. result.name)
+        if result.note then
+            safeLog("  Note: " .. result.note)
+        end
+        failed = failed + 1
+    end
+end
+safeLog("Passed: " .. passed .. "/" .. (passed + failed))
 ```
 
 ---
 
 ## Best Practices
 
-### 1. Always Check Client Context
+### 1. Cache Library References
 
 ```lua
-local pz_commons = require("pz_lua_commons/client")
+local pzc     = require("pz_lua_commons_client")
+local inspect = pzc.kikito.inspectlua
+local serpent = pzc.pkulchenko.serpent
+local _30log  = pzc.yonaba.yon_30log
+```
 
--- Check availability before using
-if not pz_commons.kikito.inspectlua then
-    print("WARNING: Client libraries not available (server?)")
-    return
+### 2. Use SafeLogger, Not `print`
+
+```lua
+local pz_utils = require("pz_utils_shared")
+local _logger = pz_utils.escape.SafeLogger.new("MY_MOD")
+
+if inspect then
+    _logger:log(inspect(some_table))
 end
 ```
 
-### 2. Use inspect for Debugging
+### 3. Guard Before Use
 
 ```lua
-local function debug_player_state()
-    local player = getPlayer()
-    if player then
-        print(inspect({
-            name = player:getUsername(),
-            health = player:getHealth()
-        }))
-    end
+if pzc.kikito.inspectlua then
+    -- safe
+end
+
+if pzc.pkulchenko.serpent then
+    -- safe
 end
 ```
 
-### 3. Use serpent for Config
+### 4. Use `inspect` for Debugging Only
+
+`inspect` is for development. Avoid calling it in hot paths or production loops.
+
+### 5. Limit Inspection Depth
 
 ```lua
--- Save mod configuration
-local config = {
-    version = "1.0",
-    enabled = true,
-    settings = {
-        debug = true,
-        max_items = 64
-    }
-}
-
-local file = io.open("config.lua", "w")
-file:write(serpent.dump(config))
-file:close()
+inspect(deep_table, { depth = 2 })
 ```
 
-### 4. Use 30log for Client Classes
+### 6. Wrap Functional Calls in `pcall`
+
+Follow the test suite pattern — wrap library calls in `pcall` when stability matters:
 
 ```lua
--- Create game entities with 30log
-local NPC = yon30log("NPC")
-
-function NPC:initialize(name)
-    self.name = name
+local ok, err = pcall(function()
+    local dumped = serpent.dump(data)
+    -- ...
+end)
+if not ok then
+    _logger:log("serpent error: " .. tostring(err))
 end
-
-function NPC:greet()
-    print("Hello, I am " .. self.name)
-end
-
-local npc = NPC:new("Guard")
-npc:greet()
-```
-
-### 5. Safe Library Access
-
-```lua
-local function get_library(path)
-    local pz_commons = require("pz_lua_commons/client")
-    local lib = pz_commons
-    
-    for part in path:gmatch("[^.]+") do
-        if lib then
-            lib = lib[part]
-        else
-            return nil
-        end
-    end
-    
-    return lib
-end
-
-local inspect = get_library("kikito.inspectlua")
-```
-
-### 6. Combine Libraries Effectively
-
-```lua
--- Debug data with inspect, serialize with serpent
-local data = {/* ... */}
-
--- View formatted
-print(inspect(data))
-
--- Save to file
-local file = io.open("data.lua", "w")
-file:write(serpent.dump(data))
-file:close()
 ```
 
 ---
 
-## Complete Example: Debug Console
+## Troubleshooting
+
+### Libraries are nil
+
+**Cause**: Code running on server (client libraries not loaded).
+**Solution**: Check context before using:
 
 ```lua
-local pz_commons = require("pz_lua_commons/client")
-local inspect = pz_commons.kikito.inspectlua
-local serpent = pz_commons.pkulchenko.serpent
-
-if not inspect or not serpent then
-    error("Debug console requires inspectlua and serpent")
+if pzc.kikito.inspectlua then
+    -- use it
 end
+```
 
-local DebugConsole = {}
-DebugConsole.commands = {}
+### inspect() not found
 
-function DebugConsole:register_command(name, fn)
-    self.commands[name] = fn
+**Cause**: `inspectlua` is a callable table, not a plain function. Access it as `pzc.kikito.inspectlua`, then call it directly.
+
+```lua
+local inspect = pzc.kikito.inspectlua
+local result = inspect({ a = 1 })   -- call it directly
+```
+
+### serpent.load() returns unexpected results
+
+**Cause**: `serpent.load` returns two values: `ok` (boolean) and the deserialized value.
+
+```lua
+local ok, value = serpent.load(serialized_string)
+if ok then
+    -- use value
 end
+```
 
-function DebugConsole:execute(cmd, ...)
-    if not self.commands[cmd] then
-        print("Unknown command: " .. cmd)
-        return
-    end
-    
-    local success, result = pcall(self.commands[cmd], ...)
-    
-    if success then
-        if result then
-            print(inspect(result))
-        end
-    else
-        print("Error: " .. tostring(result))
-    end
-end
+### Module not found
 
--- Register built-in commands
-DebugConsole:register_command("player", function()
-    return {
-        name = getPlayer():getUsername(),
-        health = getPlayer():getHealth()
-    }
-end)
+**Cause**: Missing dependency. Ensure `mod.info` includes `require=\pz_lua_commons`.
 
-DebugConsole:register_command("save_state", function()
-    local state = {timestamp = os.time()}
-    local file = io.open("debug_state.lua", "w")
-    file:write(serpent.dump(state))
-    file:close()
-    return "State saved"
-end)
+---
 
-return DebugConsole
+## API Quick Reference
+
+```lua
+local pzc = require("pz_lua_commons_client")
+
+-- inspectlua (callable table)
+local str = pzc.kikito.inspectlua(obj)
+local str = pzc.kikito.inspectlua(obj, { depth = 2 })
+
+-- serpent
+local str       = pzc.pkulchenko.serpent.dump(obj)
+local ok, value = pzc.pkulchenko.serpent.load(str)
+local str       = pzc.pkulchenko.serpent.line(obj)
+
+-- 30log
+local MyClass  = pzc.yonaba.yon_30log("ClassName")
+function MyClass:initialize(...) end
+local instance = MyClass:new(...)
+pzc.yonaba.yon_30log.isClass(MyClass)       -- true
+pzc.yonaba.yon_30log.isInstance(instance)    -- true
+instance:instanceOf(MyClass)                 -- true
 ```
 
 ---
@@ -933,113 +542,19 @@ return DebugConsole
 ## Module Capabilities Summary
 
 ### inspectlua
-✓ Pretty-print any Lua table
-✓ Customizable depth and formatting
-✓ Perfect for debugging
-✓ Shows structure clearly
-✓ Handles nested data well
+- ✓ Pretty-print any Lua value
+- ✓ Customizable depth and formatting
+- ✓ Callable table interface
+- ✓ Handles nested data
 
 ### serpent
-✓ Serialize Lua to readable format
-✓ Deserialize back from string
-✓ Save/load configuration
-✓ More compact than JSON
-✓ Lua-native syntax
+- ✓ Serialize Lua values to loadable strings
+- ✓ Deserialize back with `serpent.load`
+- ✓ One-line output with `serpent.line`
+- ✓ Lua-native syntax
 
 ### 30log
-✓ Compact OOP with classes ("30 Lines Of Goodness")
-✓ Inheritance and mixins support
-✓ Ultra-lightweight implementation
-✓ Fast and elegant
-✓ Perfect for client-side entity classes
-
----
-
-## Examples Reference
-
-For complete working examples, see:
-- `example_02_inspect_debug.lua`
-- `example_03_serpent_serialize.lua`
-- `example_04_logging.lua`
-- `example_05_combined_utilities.lua`
-- `example_11_30log_oop.lua`
-
----
-
-## Troubleshooting
-
-### Issue: Libraries are nil
-**Cause**: Code running on server (client libraries not loaded)
-**Solution**:
-```lua
-if isServer() then
-    print("Client libraries not available on server")
-    return
-end
-```
-
-### Issue: inspect() function not found
-**Cause**: Module might not have loaded
-**Solution**:
-```lua
-if not pz_commons.kikito.inspectlua then
-    print("inspectlua unavailable")
-    return
-end
-```
-
-### Issue: serpent.load() not working
-**Cause**: Invalid Lua syntax in saved file
-**Solution**:
-```lua
-local success, result = pcall(function()
-    return serpent.load(content)()
-end)
-
-if not success then
-    print("Failed to load: " .. tostring(result))
-end
-```
-
----
-
-## Performance Tips
-
-1. **Cache library references** at module load
-2. **Use inspect only for debugging**, not production
-3. **Limit inspect depth** when tables are complex
-4. **Serialize only when needed**, not every frame
-5. **Use 30log freely** - it's ultra-lightweight ("30 Lines Of Goodness")
-
----
-
-## API Quick Reference
-
-```lua
-local pz_commons = require("pz_lua_commons/client")
-
--- inspectlua
-pz_commons.kikito.inspectlua(obj, {depth = 2})
-
--- serpent
-pz_commons.pkulchenko.serpent.dump(obj)
-pz_commons.pkulchenko.serpent.load(str)()
-pz_commons.pkulchenko.serpent.line(obj)
-
--- 30log
-local MyClass = pz_commons.yonaba.yon_30log("ClassName")
-function MyClass:initialize(...) end
-local instance = MyClass:new(...)
-instance:instanceOf(MyClass)
-MyClass:instances()
-```
-
----
-
-## Additional Notes
-
-- Client libraries are **client-side only**
-- Safe to require everywhere, but will return nil on server
-- Combine with shared libraries (middleclass) as needed
-- Perfect for mod development and debugging
-- Use with Project Zomboid client API for full power
+- ✓ Minimal OOP ("30 Lines Of Goodness")
+- ✓ Class creation, inheritance, mixins
+- ✓ Type introspection (`isClass`, `isInstance`, `instanceOf`)
+- ✓ Ultra-lightweight
