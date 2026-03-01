@@ -1,7 +1,7 @@
 -- Test Suite: pz_utils - Escape Utilities
 -- Tests for Debounce, EventManager, SafeLogger, SafeRequire, and Utilities
 
-local pz_utils = require("pz_lua_commons/shared")
+local pz_utils = require("pz_utils_shared")
 local escape = pz_utils[1] or pz_utils.escape
 
 -- Simple test framework
