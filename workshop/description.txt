@@ -10,6 +10,10 @@ A curated collection of Lua libraries maintained for Project Zomboid, with prope
 
 Essential for mods that depend on this framework.
 
+[h3]⚠️ Important Note[/h3]
+This mod is not designed to be installed alone. It serves as a utility for other mods.
+ [url=https://steamcommunity.com/workshop/filedetails/discussion/3672788969/760682600544357378/]Which mods use PZ Lua Commons? (Add yours here!)[/url]
+
 [h2]Documentation[/h2]
 
 For detailed information on all included libraries, installation instructions, and developer setup, see the full documentation:
