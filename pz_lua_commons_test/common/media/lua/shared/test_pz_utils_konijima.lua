@@ -15,7 +15,14 @@ local function assert_equals(actual, expected, message)
         return true
     else
         testsFailed = testsFailed + 1
-        print("FAIL: " .. (message or "assertion") .. " - expected: " .. tostring(expected) .. " got: " .. tostring(actual))
+        print(
+            "FAIL: "
+                .. (message or "assertion")
+                .. " - expected: "
+                .. tostring(expected)
+                .. " got: "
+                .. tostring(actual)
+        )
         return false
     end
 end
@@ -34,7 +41,14 @@ local function assert_type(value, expectedType, message)
         return true
     else
         testsFailed = testsFailed + 1
-        print("FAIL: " .. (message or "type assertion") .. " - expected type: " .. expectedType .. " got: " .. type(value))
+        print(
+            "FAIL: "
+                .. (message or "type assertion")
+                .. " - expected type: "
+                .. expectedType
+                .. " got: "
+                .. type(value)
+        )
         return false
     end
 end
@@ -60,7 +74,7 @@ tests.test_is_single_player_debug_implies_single_player = function()
     if konijima.IsSinglePlayerDebug() then
         assert_true(konijima.IsSinglePlayer(), "Debug mode implies single player mode")
     else
-        testsPassed = testsPassed + 1  -- Can't assert false case without breaking single player
+        testsPassed = testsPassed + 1 -- Can't assert false case without breaking single player
     end
 end
 
@@ -82,14 +96,16 @@ end
 tests.test_mutual_exclusivity_single_vs_client_server = function()
     -- These three conditions should be mutually exclusive
     -- isServer(), isClient(), and IsSinglePlayer() should not overlap
-    
+
     local isSP = konijima.IsSinglePlayer()
-    
+
     -- In test environment without PZ context, IsSinglePlayer should be true
     -- and IsClientOnly should be false
     if isSP then
-        assert_false(konijima.IsClientOnly(), 
-                     "Single player mode incompatible with client-only mode")
+        assert_false(
+            konijima.IsClientOnly(),
+            "Single player mode incompatible with client-only mode"
+        )
     else
         testsPassed = testsPassed + 1
     end
@@ -115,8 +131,11 @@ tests.test_is_client_staff_implies_client_admin = function()
     -- Staff should be superset of admin or different permission level
     -- In single player, both should return same value
     if konijima.IsSinglePlayer() then
-        assert_equals(konijima.IsClientAdmin(), konijima.IsClientStaff(), 
-                      "In single player, admin and staff should have same status")
+        assert_equals(
+            konijima.IsClientAdmin(),
+            konijima.IsClientStaff(),
+            "In single player, admin and staff should have same status"
+        )
     else
         testsPassed = testsPassed + 1
     end
@@ -177,7 +196,7 @@ print("=== Square Utility Tests ===\n")
 tests.test_square_to_string_format = function()
     -- This test verifies the expected format without requiring PZ API
     -- In actual usage: konijima.SquareToString(square) returns "x|y|z"
-    
+
     -- We can test the reverse function
     local squareStr = "100|200|0"
     local parts = konijima.SplitString(squareStr, "|")
@@ -188,7 +207,7 @@ tests.test_string_to_square_parsing = function()
     -- Test coordinate extraction from square string
     local squareStr = "150|250|5"
     local coords = konijima.SplitString(squareStr, "|")
-    
+
     assert_equals(tonumber(coords[1]), 150, "First coordinate should parse to 150")
     assert_equals(tonumber(coords[2]), 250, "Second coordinate should parse to 250")
     assert_equals(tonumber(coords[3]), 5, "Third coordinate should parse to 5")
@@ -199,7 +218,7 @@ tests.test_square_string_roundtrip = function()
     local originalStr = "100|200|0"
     local coords = konijima.SplitString(originalStr, "|")
     local rebuilt = coords[1] .. "|" .. coords[2] .. "|" .. coords[3]
-    
+
     assert_equals(rebuilt, originalStr, "Roundtrip should preserve coordinates")
 end
 
@@ -210,39 +229,55 @@ end
 print("=== Client Command Tests ===\n")
 
 tests.test_send_client_command_exists = function()
-    assert_type(konijima.SendClientCommand, "function", 
-                "SendClientCommand should be a function")
+    assert_type(konijima.SendClientCommand, "function", "SendClientCommand should be a function")
 end
 
 tests.test_send_client_command_accepts_parameters = function()
     -- This test verifies the function doesn't crash with valid parameters
     -- It won't actually send anything without PZ API context
     local success, err = pcall(function()
-        konijima.SendClientCommand("TestModule", "TestCommand", {data = "test"})
+        konijima.SendClientCommand("TestModule", "TestCommand", { data = "test" })
     end)
     assert_true(success, "SendClientCommand should accept valid parameters")
 end
 
 tests.test_send_server_command_to_exists = function()
-    assert_type(konijima.SendServerCommandTo, "function",
-                "SendServerCommandTo should be a function")
+    assert_type(
+        konijima.SendServerCommandTo,
+        "function",
+        "SendServerCommandTo should be a function"
+    )
 end
 
 tests.test_send_server_command_to_all_exists = function()
-    assert_type(konijima.SendServerCommandToAll, "function",
-                "SendServerCommandToAll should be a function")
+    assert_type(
+        konijima.SendServerCommandToAll,
+        "function",
+        "SendServerCommandToAll should be a function"
+    )
 end
 
 tests.test_send_server_command_to_all_in_range_exists = function()
-    assert_type(konijima.SendServerCommandToAllInRange, "function",
-                "SendServerCommandToAllInRange should be a function")
+    assert_type(
+        konijima.SendServerCommandToAllInRange,
+        "function",
+        "SendServerCommandToAllInRange should be a function"
+    )
 end
 
 tests.test_send_server_command_to_all_in_range_parameters = function()
     -- Verify function accepts all required parameters
     local success, err = pcall(function()
-        konijima.SendServerCommandToAllInRange(100, 200, 0, 0, 20, 
-                                               "TestModule", "TestCommand", {data = "test"})
+        konijima.SendServerCommandToAllInRange(
+            100,
+            200,
+            0,
+            0,
+            20,
+            "TestModule",
+            "TestCommand",
+            { data = "test" }
+        )
     end)
     assert_true(success, "SendServerCommandToAllInRange should accept valid parameters")
 end
@@ -254,13 +289,15 @@ end
 print("=== Player Utility Tests ===\n")
 
 tests.test_get_player_from_username_exists = function()
-    assert_type(konijima.GetPlayerFromUsername, "function",
-                "GetPlayerFromUsername should be a function")
+    assert_type(
+        konijima.GetPlayerFromUsername,
+        "function",
+        "GetPlayerFromUsername should be a function"
+    )
 end
 
 tests.test_is_player_in_range_exists = function()
-    assert_type(konijima.IsPlayerInRange, "function",
-                "IsPlayerInRange should be a function")
+    assert_type(konijima.IsPlayerInRange, "function", "IsPlayerInRange should be a function")
 end
 
 tests.test_is_player_in_range_distance_calculation = function()
@@ -281,8 +318,11 @@ end
 print("=== Electricity Utility Tests ===\n")
 
 tests.test_square_has_electricity_exists = function()
-    assert_type(konijima.SquareHasElectricity, "function",
-                "SquareHasElectricity should be a function")
+    assert_type(
+        konijima.SquareHasElectricity,
+        "function",
+        "SquareHasElectricity should be a function"
+    )
 end
 
 tests.test_square_has_electricity_with_nil = function()
@@ -300,8 +340,7 @@ end
 print("=== Server Information Tests ===\n")
 
 tests.test_get_server_name_exists = function()
-    assert_type(konijima.GetServerName, "function",
-                "GetServerName should be a function")
+    assert_type(konijima.GetServerName, "function", "GetServerName should be a function")
 end
 
 tests.test_get_server_name_returns_string = function()
@@ -320,8 +359,11 @@ end
 print("=== Inventory Tests ===\n")
 
 tests.test_find_all_item_in_inventory_by_tag_exists = function()
-    assert_type(konijima.FindAllItemInInventoryByTag, "function",
-                "FindAllItemInInventoryByTag should be a function")
+    assert_type(
+        konijima.FindAllItemInInventoryByTag,
+        "function",
+        "FindAllItemInInventoryByTag should be a function"
+    )
 end
 
 -- ============================================================================
@@ -331,8 +373,11 @@ end
 print("=== Moveable Object Tests ===\n")
 
 tests.test_get_moveable_display_name_exists = function()
-    assert_type(konijima.GetMoveableDisplayName, "function",
-                "GetMoveableDisplayName should be a function")
+    assert_type(
+        konijima.GetMoveableDisplayName,
+        "function",
+        "GetMoveableDisplayName should be a function"
+    )
 end
 
 tests.test_get_moveable_display_name_with_nil = function()

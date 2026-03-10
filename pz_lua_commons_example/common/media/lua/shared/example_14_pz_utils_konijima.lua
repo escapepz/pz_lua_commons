@@ -140,7 +140,7 @@ local text = "apple,banana,orange"
 local fruits = konijima.SplitString(text, ",")
 print("Split string result:")
 for i, fruit in ipairs(fruits) do
-	print("  " .. i .. ": " .. fruit)
+    print("  " .. i .. ": " .. fruit)
 end
 
 -- Split with different delimiter
@@ -203,14 +203,14 @@ print("Moveable object utilities available (use in actual game context)")
 print("\n--- Practical Example: Permission-Based Action ---")
 
 local function executeAdminCommand(commandName, targetPlayer)
-	-- Check if client is admin (single player or online admin)
-	if konijima.IsClientAdmin() then
-		print("Admin executing command: " .. commandName)
-		-- Send command to server
-		konijima.SendClientCommand("MyMod", commandName, { target = targetPlayer })
-	else
-		print("Permission denied: Admin only command")
-	end
+    -- Check if client is admin (single player or online admin)
+    if konijima.IsClientAdmin() then
+        print("Admin executing command: " .. commandName)
+        -- Send command to server
+        konijima.SendClientCommand("MyMod", commandName, { target = targetPlayer })
+    else
+        print("Permission denied: Admin only command")
+    end
 end
 
 -- In actual game, this would check real admin status
@@ -223,13 +223,13 @@ executeAdminCommand("KickPlayer", "PlayerName")
 print("\n--- Practical Example: Distance-Based Event ---")
 
 local function notifyPlayersInRange(eventX, eventY, eventZ, maxRange, message)
-	-- Server would send command only to players in range
-	if konijima.IsServerOrSinglePlayer() then
-		-- In real context, would iterate through online players
-		print("Would notify players within " .. maxRange .. " blocks")
-		-- konijima.SendServerCommandToAllInRange(eventX, eventY, eventZ, 0, maxRange,
-		--                                         "MyMod", "Notification", {msg = message})
-	end
+    -- Server would send command only to players in range
+    if konijima.IsServerOrSinglePlayer() then
+        -- In real context, would iterate through online players
+        print("Would notify players within " .. maxRange .. " blocks")
+        -- konijima.SendServerCommandToAllInRange(eventX, eventY, eventZ, 0, maxRange,
+        --                                         "MyMod", "Notification", {msg = message})
+    end
 end
 
 notifyPlayersInRange(100, 200, 0, 20, "Event happening nearby!")

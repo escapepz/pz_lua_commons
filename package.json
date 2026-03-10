@@ -4,8 +4,15 @@
         "build": "pzstudio clean && pzstudio build",
         "watch": "pzstudio clean && pzstudio build && pzstudio watch",
         "update": "pzstudio update",
+        "format": "pnpm exec stylua .",
+        "format:check": "pnpm exec stylua -c .",
         "experimental:setup:vanilla": "mkdir .tmp & mklink /J \"%CD%\\.tmp\\vanilla\" \"%ProgramFiles(x86)%\\Steam\\steamapps\\common\\ProjectZomboid\\media\\lua\"",
         "experimental:setup:nonsteam:pz_lua_commons": "mklink /J \"C:\\ZomboidClient1\\mods\\pz_lua_commons\" \"%CD%\\pz_lua_commons\"",
         "experimental:setup:nonsteam:pz_lua_commons_test": "mklink /J \"C:\\ZomboidClient1\\mods\\pz_lua_commons_test\" \"%CD%\\pz_lua_commons_test\""
+    },
+    "devDependencies": {
+        "@johnnymorganz/stylua-bin": "^2.3.1",
+        "@ls-lint/ls-lint": "^2.3.1",
+        "lefthook": "^2.1.2"
     }
 }

@@ -16,15 +16,15 @@ local config = {
         graphicsQuality = "high",
         soundVolume = 0.8,
         language = "en",
-        enableMods = true
+        enableMods = true,
     },
     keybinds = {
         moveForward = "w",
         moveBackward = "s",
         moveLeft = "a",
         moveRight = "d",
-        jump = "space"
-    }
+        jump = "space",
+    },
 }
 
 -- Encode to JSON

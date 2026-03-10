@@ -10,7 +10,7 @@ local function safeGetPlayer()
     local success, player = pcall(function()
         return getPlayer()
     end)
-    
+
     if success and player then
         return player
     else
@@ -24,7 +24,7 @@ local function safeGetInventory()
     local success, inventory = pcall(function()
         return getPlayer():getInventory()
     end)
-    
+
     if success and inventory then
         return inventory
     else
@@ -41,10 +41,10 @@ local function safeGetStats()
             health = player:getHealth(),
             hunger = player:getStats():getHunger(),
             fatigue = player:getStats():getFatigue(),
-            stress = player:getStats():getStress()
+            stress = player:getStats():getStress(),
         }
     end)
-    
+
     if success and stats then
         return stats
     else
@@ -71,7 +71,7 @@ local function initiateTrading(otherPlayer)
     local success = pcall(function()
         acceptTrading(getPlayer(), otherPlayer, true)
     end)
-    
+
     if success then
         print("Trading initiated")
     else
@@ -84,7 +84,7 @@ local function syncPlayerXp()
     local success = pcall(function()
         SyncXp(getPlayer())
     end)
-    
+
     if success then
         print("Player XP synchronized")
     else

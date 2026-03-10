@@ -12,13 +12,13 @@ local sessionData = {
     settings = {
         difficulty = "normal",
         pvp = true,
-        sandbox = false
+        sandbox = false,
     },
     stats = {
         zombiesKilled = ZombRand(100),
         distanceTraveled = ZombRandFloat(0, 50),
-        itemsCrafted = ZombRand(50)
-    }
+        itemsCrafted = ZombRand(50),
+    },
 }
 
 -- Serialize session data
@@ -45,8 +45,8 @@ local GameSettings = {
     data = {
         soundVolume = 80,
         graphicsQuality = "high",
-        difficultyLevel = "normal"
-    }
+        difficultyLevel = "normal",
+    },
 }
 
 function GameSettings:save()
@@ -74,7 +74,7 @@ local saved = GameSettings:save()
 
 -- Demonstrate table operations
 print("\n=== Table Operations ===")
-local inventory = {sword = 1, shield = 1, potion = 5}
+local inventory = { sword = 1, shield = 1, potion = 5 }
 print("Initial inventory (size " .. table.getn(inventory) .. "):")
 for item, count in pairs(inventory) do
     print("  " .. item .. " x" .. count)
@@ -98,4 +98,4 @@ print("After wipe - Inventory empty? " .. tostring(table.isempty(inventory)))
 print("\n=== Debug Information ===")
 -- Get debug info
 print("Kahlua debug stack trace:")
-print(pp({frame = "game_loop", tick = ZombRand(1000), players = ZombRand(4)}))
+print(pp({ frame = "game_loop", tick = ZombRand(1000), players = ZombRand(4) }))

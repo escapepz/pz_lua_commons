@@ -10,7 +10,7 @@ local MessageType = {
     PLAYER_UPDATE = "player_update",
     ITEM_TRANSFER = "item_transfer",
     WORLD_STATE = "world_state",
-    PLAYER_ACTION = "player_action"
+    PLAYER_ACTION = "player_action",
 }
 
 -- Message builder
@@ -18,7 +18,7 @@ local function createMessage(messageType, data)
     return {
         type = messageType,
         timestamp = os.time(),
-        data = data
+        data = data,
     }
 end
 
@@ -39,7 +39,7 @@ local playerPosMsg = createMessage(MessageType.PLAYER_UPDATE, {
     x = 100.5,
     y = 200.3,
     z = 0,
-    direction = "north"
+    direction = "north",
 })
 
 local serializedPos = serializeMessage(playerPosMsg)
@@ -59,10 +59,10 @@ local itemTransferMsg = createMessage(MessageType.ITEM_TRANSFER, {
     fromPlayer = "player_001",
     toPlayer = "player_002",
     items = {
-        {id = "weapon_axe", quantity = 1},
-        {id = "food_canned", quantity = 5},
-        {id = "ammo_9mm", quantity = 30}
-    }
+        { id = "weapon_axe", quantity = 1 },
+        { id = "food_canned", quantity = 5 },
+        { id = "ammo_9mm", quantity = 30 },
+    },
 })
 
 print("Item transfer message:")
@@ -75,7 +75,7 @@ local worldStateMsg = createMessage(MessageType.WORLD_STATE, {
     weather = "rainy",
     temperature = 15,
     activeZombies = ZombRand(50, 500),
-    activePlayers = 4
+    activePlayers = 4,
 })
 
 local serializedWorld = serializeMessage(worldStateMsg)
@@ -88,7 +88,7 @@ local actionMsg = createMessage(MessageType.PLAYER_ACTION, {
     playerId = "player_001",
     action = "craft_item",
     recipe = "wooden_spear",
-    duration = 30
+    duration = 30,
 })
 
 print("Action message:")
@@ -100,7 +100,7 @@ local MessageHandler = {}
 
 function MessageHandler.handle(msgStr)
     local msg = deserializeMessage(msgStr)
-    
+
     if msg.type == MessageType.PLAYER_UPDATE then
         print("Handling player update from " .. msg.data.playerId)
     elseif msg.type == MessageType.ITEM_TRANSFER then
@@ -110,7 +110,7 @@ function MessageHandler.handle(msgStr)
     elseif msg.type == MessageType.PLAYER_ACTION then
         print("Handling player action: " .. msg.data.action)
     end
-    
+
     return true
 end
 

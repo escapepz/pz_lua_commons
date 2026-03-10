@@ -13,7 +13,7 @@ end
 print("=== Advanced Game Server Session Manager ===")
 
 -- Game session class
-local GameSession = middleclass('GameSession')
+local GameSession = middleclass("GameSession")
 
 function GameSession:initialize(sessionId, difficulty)
     self.sessionId = sessionId
@@ -23,7 +23,7 @@ function GameSession:initialize(sessionId, difficulty)
     self.worldState = {
         time = 0,
         weather = "clear",
-        zombieCount = ZombRand(100, 500)
+        zombieCount = ZombRand(100, 500),
     }
 end
 
@@ -33,7 +33,7 @@ function GameSession:addPlayer(playerId, playerName)
         name = playerName,
         joinedAt = os.time(),
         level = 1,
-        experience = 0
+        experience = 0,
     }
     signal.emit("player:joined", playerId, playerName)
 end
@@ -65,7 +65,7 @@ function GameSession:serialize()
         difficulty = self.difficulty,
         createdAt = self.createdAt,
         playerCount = self:getPlayerCount(),
-        worldState = self.worldState
+        worldState = self.worldState,
     }, true, "  ")
 end
 
@@ -97,7 +97,7 @@ print("\nUpdating world state...")
 session:updateWorldState({
     time = 1440,
     weather = "rainy",
-    zombieCount = ZombRand(200, 800)
+    zombieCount = ZombRand(200, 800),
 })
 
 print("\nRemoving player...")
@@ -115,7 +115,7 @@ print("\n=== Command Processing ===")
 local commands = {
     "set_difficulty=hard, enable_pvp=true",
     "spawn_zombies=50, area=warehouse",
-    "teleport_player=p001, x=100, y=200, z=0"
+    "teleport_player=p001, x=100, y=200, z=0",
 }
 
 for _, cmdStr in ipairs(commands) do
@@ -132,9 +132,9 @@ end
 -- Inventory management using tables
 print("\n=== Multi-Player Inventory System ===")
 local inventories = {
-    p001 = {sword = 1, shield = 1, potion = 5},
-    p002 = {bow = 1, arrows = 30, food = 10},
-    p003 = {gun = 1, ammo = 45}
+    p001 = { sword = 1, shield = 1, potion = 5 },
+    p002 = { bow = 1, arrows = 30, food = 10 },
+    p003 = { gun = 1, ammo = 45 },
 }
 
 print("Current inventories:")

@@ -21,7 +21,7 @@ local function safeGetSquare(x, y, z)
     local success, result = pcall(function()
         return getCell():getGridSquare(x, y, z)
     end)
-    
+
     if success and result then
         return result
     else
@@ -35,7 +35,7 @@ local function sendServerCommand(command)
     local success, result = pcall(function()
         SendCommandToServer(command)
     end)
-    
+
     if success then
         print("Command sent: " .. command)
     else

@@ -26,12 +26,15 @@ package.path = package.path .. ";" .. root .. "pz_lua_commons_test/42/media/lua/
 package.path = package.path .. ";" .. root .. "pz_lua_commons_test/42/media/lua/client/?.lua"
 package.path = package.path .. ";" .. root .. "pz_lua_commons_test/42/media/lua/client/?/init.lua"
 package.path = package.path .. ";" .. root .. "pz_lua_commons_test/common/media/lua/shared/?.lua"
-package.path = package.path .. ";" .. root .. "pz_lua_commons_test/common/media/lua/shared/?/init.lua"
+package.path = package.path
+    .. ";"
+    .. root
+    .. "pz_lua_commons_test/common/media/lua/shared/?/init.lua"
 
 -- Mock global PZ events if needed
 _G.Events = {
-	OnGameStart = { Add = function() end },
-	OnTick = { Add = function() end },
+    OnGameStart = { Add = function() end },
+    OnTick = { Add = function() end },
 }
 
 -- Execute the test runner from the mod
@@ -41,8 +44,8 @@ print(string.rep("=", 70))
 
 local ok, test_runner = pcall(require, "pz_lua_commons_test/test_runner")
 if not ok then
-	print("FAILED to load test_runner: " .. tostring(test_runner))
-	os.exit(1)
+    print("FAILED to load test_runner: " .. tostring(test_runner))
+    os.exit(1)
 end
 
 print("Test runner loaded successfully.\n")
@@ -50,10 +53,10 @@ print("Test runner loaded successfully.\n")
 local results = test_runner.run()
 
 if results and results.total_failed == 0 then
-	print("\n[SUCCESS] All mod tests passed!")
-	os.exit(0)
+    print("\n[SUCCESS] All mod tests passed!")
+    os.exit(0)
 else
-	local failed = results and results.total_failed or "unknown"
-	print("\n[FAILURE] " .. failed .. " tests failed.")
-	os.exit(1)
+    local failed = results and results.total_failed or "unknown"
+    print("\n[FAILURE] " .. failed .. " tests failed.")
+    os.exit(1)
 end

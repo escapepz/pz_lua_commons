@@ -10,7 +10,7 @@ if not middleclass then
 end
 
 -- Define a base Character class
-local Character = middleclass('Character')
+local Character = middleclass("Character")
 
 function Character:initialize(name, health)
     self.name = name
@@ -33,7 +33,7 @@ function Character:isDead()
 end
 
 -- Define a Warrior class that inherits from Character
-local Warrior = middleclass('Warrior', Character)
+local Warrior = middleclass("Warrior", Character)
 
 function Warrior:initialize(name, health, armor)
     Character.initialize(self, name, health)

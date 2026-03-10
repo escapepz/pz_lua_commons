@@ -12,7 +12,7 @@ end
 print("=== Class-Based Networking ===")
 
 -- Base Network Message class
-local NetworkMessage = middleclass('NetworkMessage')
+local NetworkMessage = middleclass("NetworkMessage")
 
 function NetworkMessage:initialize(messageType, playerId)
     self.messageType = messageType
@@ -28,12 +28,12 @@ function NetworkMessage:toTable()
     return {
         type = self.messageType,
         playerId = self.playerId,
-        timestamp = self.timestamp
+        timestamp = self.timestamp,
     }
 end
 
 -- Player Update message class
-local PlayerUpdateMessage = middleclass('PlayerUpdateMessage', NetworkMessage)
+local PlayerUpdateMessage = middleclass("PlayerUpdateMessage", NetworkMessage)
 
 function PlayerUpdateMessage:initialize(playerId, x, y, z)
     NetworkMessage.initialize(self, "player_update", playerId)
@@ -47,13 +47,13 @@ function PlayerUpdateMessage:toTable()
     base.data = {
         x = self.x,
         y = self.y,
-        z = self.z
+        z = self.z,
     }
     return base
 end
 
 -- Item interaction message
-local ItemActionMessage = middleclass('ItemActionMessage', NetworkMessage)
+local ItemActionMessage = middleclass("ItemActionMessage", NetworkMessage)
 
 function ItemActionMessage:initialize(playerId, action, itemId, quantity)
     NetworkMessage.initialize(self, "item_action", playerId)
@@ -67,13 +67,13 @@ function ItemActionMessage:toTable()
     base.data = {
         action = self.action,
         itemId = self.itemId,
-        quantity = self.quantity
+        quantity = self.quantity,
     }
     return base
 end
 
 -- Combat action message
-local CombatMessage = middleclass('CombatMessage', NetworkMessage)
+local CombatMessage = middleclass("CombatMessage", NetworkMessage)
 
 function CombatMessage:initialize(playerId, targetId, weaponId, damage)
     NetworkMessage.initialize(self, "combat_action", playerId)
@@ -87,7 +87,7 @@ function CombatMessage:toTable()
     base.data = {
         targetId = self.targetId,
         weaponId = self.weaponId,
-        damage = self.damage
+        damage = self.damage,
     }
     return base
 end
@@ -115,7 +115,7 @@ local MessageRouter = {}
 function MessageRouter.route(messageStr)
     local msg = deserialize(messageStr)
     local msgType = msg.type
-    
+
     if msgType == "player_update" then
         print("Routing player_update to position handler")
         print("  Player: " .. msg.playerId)
