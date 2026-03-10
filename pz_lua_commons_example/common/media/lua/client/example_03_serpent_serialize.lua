@@ -16,9 +16,9 @@ local gameConfig = {
     settings = {
         difficulty = "normal",
         pvp = true,
-        respawnTime = 30
+        respawnTime = 30,
     },
-    weapons = {"axe", "gun", "knife"}
+    weapons = { "axe", "gun", "knife" },
 }
 
 -- Serialize table to string

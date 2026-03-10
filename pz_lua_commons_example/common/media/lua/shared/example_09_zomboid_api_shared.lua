@@ -76,13 +76,13 @@ local events = {}
 local function generateRandomEvent()
     local eventType = ZombRand(3)
     local eventId = "event_" .. ZombRand(10000)
-    
+
     if eventType == 0 then
-        return {id = eventId, type = "zombie_horde", size = ZombRand(5, 20)}
+        return { id = eventId, type = "zombie_horde", size = ZombRand(5, 20) }
     elseif eventType == 1 then
-        return {id = eventId, type = "supply_drop", items = ZombRand(3, 10)}
+        return { id = eventId, type = "supply_drop", items = ZombRand(3, 10) }
     else
-        return {id = eventId, type = "weather_change", severity = ZombRandFloat(0, 1)}
+        return { id = eventId, type = "weather_change", severity = ZombRandFloat(0, 1) }
     end
 end
 

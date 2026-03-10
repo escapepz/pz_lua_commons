@@ -14,8 +14,8 @@ local worldData = {
     buildings = {
         "farm_001",
         "house_002",
-        "warehouse_003"
-    }
+        "warehouse_003",
+    },
 }
 
 -- Serialize to compact format (good for network transmission)
@@ -41,18 +41,18 @@ local playerState = {
     id = "player_123",
     name = "Hero",
     level = 25,
-    position = {x = 100, y = 200, z = 0},
+    position = { x = 100, y = 200, z = 0 },
     inventory = {
-        {itemId = "weapon_axe", quantity = 1},
-        {itemId = "ammo_9mm", quantity = 45},
-        {itemId = "food_canned", quantity = 12}
+        { itemId = "weapon_axe", quantity = 1 },
+        { itemId = "ammo_9mm", quantity = 45 },
+        { itemId = "food_canned", quantity = 12 },
     },
     stats = {
         health = 100,
         fatigue = 50,
         hunger = 30,
-        stress = 10
-    }
+        stress = 10,
+    },
 }
 
 -- Save player state

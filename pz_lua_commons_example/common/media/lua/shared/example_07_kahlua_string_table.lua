@@ -36,15 +36,21 @@ print("\n=== Kahlua Table Extensions (Shared) ===")
 
 -- table.isempty() - Check if table is empty
 local emptyInventory = {}
-local filledInventory = {axe = 1, bow = 3, arrows = 20}
+local filledInventory = { axe = 1, bow = 3, arrows = 20 }
 print("Is empty inventory empty? " .. tostring(table.isempty(emptyInventory)))
 print("Is filled inventory empty? " .. tostring(table.isempty(filledInventory)))
 
 -- table.wipe() - Clear all contents from a table
-local playerCache = {player1 = "Alice", player2 = "Bob", player3 = "Charlie"}
+local playerCache = { player1 = "Alice", player2 = "Bob", player3 = "Charlie" }
 print("\nBefore wipe: " .. table.getn(playerCache) .. " entries")
 table.wipe(playerCache)
-print("After wipe: " .. table.getn(playerCache) .. " entries (empty: " .. tostring(table.isempty(playerCache)) .. ")")
+print(
+    "After wipe: "
+        .. table.getn(playerCache)
+        .. " entries (empty: "
+        .. tostring(table.isempty(playerCache))
+        .. ")"
+)
 
 -- table.newarray() - Create array with initial values
 local difficulties = table.newarray("easy", "normal", "hard", "nightmare")
@@ -58,7 +64,7 @@ local gameConfig = {
     maxPlayers = 4,
     dayLength = 1440,
     respawnTime = 60,
-    pvp = true
+    pvp = true,
 }
 
 print("\nGame configuration:")

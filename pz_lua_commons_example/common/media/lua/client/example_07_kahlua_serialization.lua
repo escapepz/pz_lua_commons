@@ -13,18 +13,18 @@ local playerData = {
     inventory = {
         "sword",
         "shield",
-        "health_potion"
+        "health_potion",
     },
     stats = {
         health = 100,
         mana = 50,
-        stamina = 75
+        stamina = 75,
     },
     position = {
         x = 100,
         y = 200,
-        z = 0
-    }
+        z = 0,
+    },
 }
 
 -- Serialize to string

@@ -9,7 +9,7 @@ local os_time = os.time
 --- Return a numeric timestamp (seconds) for real-world (system) time
 --- Returns an integer (math.floor)
 function Utilities.GetIRLTimestamp()
-	return math_floor(os_time())
+    return math_floor(os_time())
 end
 
 return Utilities

@@ -22,24 +22,24 @@ local pairs = pairs
 ---@param ... any -- Additional arguments to accumulate
 ---@return boolean -- Returns true if instance was created/reset
 function Debounce.Call(id, delay, callback, ...)
-	if not debounceInstances[id] then
-		debounceInstances[id] = {
-			timer = 0,
-			delay = delay,
-			accumulator = {},
-			callback = callback,
-		}
-	end
+    if not debounceInstances[id] then
+        debounceInstances[id] = {
+            timer = 0,
+            delay = delay,
+            accumulator = {},
+            callback = callback,
+        }
+    end
 
-	local instance = debounceInstances[id]
-	instance.timer = 0 -- Reset timer on each call
-	instance.delay = delay
-	instance.callback = callback
+    local instance = debounceInstances[id]
+    instance.timer = 0 -- Reset timer on each call
+    instance.delay = delay
+    instance.callback = callback
 
-	-- Accumulate all arguments
-	instance.accumulator = { ... }
+    -- Accumulate all arguments
+    instance.accumulator = { ... }
 
-	return true
+    return true
 end
 
 --- Update all active debounce instances (call this every game tick)
@@ -47,25 +47,25 @@ end
 ---
 ---@return boolean -- Returns true if any debounce was executed
 function Debounce.Update()
-	local executed = false
+    local executed = false
 
-	for id, instance in pairs(debounceInstances) do
-		instance.timer = instance.timer + 1
+    for id, instance in pairs(debounceInstances) do
+        instance.timer = instance.timer + 1
 
-		if instance.timer >= instance.delay then
-			---@diagnostic disable-next-line: unnecessary-if
-			-- Execute callback with accumulated arguments
-			if instance.callback then
-				instance.callback(instance.accumulator)
-			end
+        if instance.timer >= instance.delay then
+            ---@diagnostic disable-next-line: unnecessary-if
+            -- Execute callback with accumulated arguments
+            if instance.callback then
+                instance.callback(instance.accumulator)
+            end
 
-			-- Clean up instance
-			debounceInstances[id] = nil
-			executed = true
-		end
-	end
+            -- Clean up instance
+            debounceInstances[id] = nil
+            executed = true
+        end
+    end
 
-	return executed
+    return executed
 end
 
 --- Cancel a pending debounce
@@ -73,24 +73,24 @@ end
 ---@param id string -- Unique identifier of the debounce instance to cancel
 ---@return boolean -- Returns true if instance was cancelled
 function Debounce.Cancel(id)
-	---@diagnostic disable-next-line: unnecessary-if
-	if debounceInstances[id] then
-		debounceInstances[id] = nil
-		return true
-	end
-	return false
+    ---@diagnostic disable-next-line: unnecessary-if
+    if debounceInstances[id] then
+        debounceInstances[id] = nil
+        return true
+    end
+    return false
 end
 
 --- Cancel all pending debounces
 ---
 ---@return number -- Returns count of cancelled instances
 function Debounce.CancelAll()
-	local count = 0
-	for id in pairs(debounceInstances) do
-		debounceInstances[id] = nil
-		count = count + 1
-	end
-	return count
+    local count = 0
+    for id in pairs(debounceInstances) do
+        debounceInstances[id] = nil
+        count = count + 1
+    end
+    return count
 end
 
 --- Check if a debounce instance is active
@@ -98,7 +98,7 @@ end
 ---@param id string -- Unique identifier of the debounce instance
 ---@return boolean -- Returns true if instance is active and waiting
 function Debounce.IsActive(id)
-	return debounceInstances[id] ~= nil
+    return debounceInstances[id] ~= nil
 end
 
 return Debounce

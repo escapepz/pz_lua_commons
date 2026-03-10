@@ -28,13 +28,15 @@ print("\n=== Kahlua Table Extensions ===")
 
 -- table.isempty() - Check if table is empty
 local emptyTable = {}
-local filledTable = {a = 1, b = 2}
+local filledTable = { a = 1, b = 2 }
 print("Is empty table empty? " .. tostring(table.isempty(emptyTable)))
 print("Is filled table empty? " .. tostring(table.isempty(filledTable)))
 
 -- table.wipe() - Clear all contents from a table
-local inventory = {sword = 1, shield = 1, potion = 5}
-print("\nBefore wipe: " .. table.concat({inventory.sword, inventory.shield, inventory.potion}, ", "))
+local inventory = { sword = 1, shield = 1, potion = 5 }
+print(
+    "\nBefore wipe: " .. table.concat({ inventory.sword, inventory.shield, inventory.potion }, ", ")
+)
 table.wipe(inventory)
 print("After wipe (empty): " .. tostring(table.isempty(inventory)))
 

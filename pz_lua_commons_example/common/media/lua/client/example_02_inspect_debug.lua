@@ -15,9 +15,9 @@ local testTable = {
     value = 42,
     nested = {
         x = 10,
-        y = 20
+        y = 20,
     },
-    list = {1, 2, 3, 4, 5}
+    list = { 1, 2, 3, 4, 5 },
 }
 
 -- Use inspect to pretty-print the table
@@ -26,4 +26,4 @@ print(inspect(testTable))
 
 -- Inspect with depth option
 print("\nInspecting with limited depth:")
-print(inspect(testTable, {depth = 1}))
+print(inspect(testTable, { depth = 1 }))

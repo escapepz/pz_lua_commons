@@ -15,7 +15,7 @@ function Application:initialize()
     self.player = {
         name = "Hero",
         level = 25,
-        inventory = {"sword", "shield", "potion"}
+        inventory = { "sword", "shield", "potion" },
     }
 end
 

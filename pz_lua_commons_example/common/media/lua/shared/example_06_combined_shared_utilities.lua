@@ -8,7 +8,7 @@ local json = pz_commons.rxi.jsonlua
 local signal = pz_commons.vrld.hump.signal
 
 -- Define a Player class using middleclass
-local Player = middleclass('Player')
+local Player = middleclass("Player")
 
 function Player:initialize(id, name, level)
     self.id = id
@@ -31,7 +31,7 @@ function Player:toJSON()
         id = self.id,
         name = self.name,
         level = self.level,
-        experience = self.experience
+        experience = self.experience,
     })
 end
 
@@ -51,17 +51,17 @@ print(player2:toJSON())
 
 -- Simulate gameplay
 player1:gainExperience(60)
-player1:gainExperience(50)  -- Will level up
+player1:gainExperience(50) -- Will level up
 
 player2:gainExperience(80)
-player2:gainExperience(30)  -- Will level up
+player2:gainExperience(30) -- Will level up
 
 -- Save player data as JSON
 local playersData = {
     players = {
         lunajson.decode(player1:toJSON()),
-        lunajson.decode(player2:toJSON())
-    }
+        lunajson.decode(player2:toJSON()),
+    },
 }
 
 local savedJSON = json.encode(playersData)

@@ -12,15 +12,15 @@ end
 -- Example data
 local gameData = {
     players = {
-        {id = 1, name = "Alice", level = 30},
-        {id = 2, name = "Bob", level = 25},
-        {id = 3, name = "Charlie", level = 28}
+        { id = 1, name = "Alice", level = 30 },
+        { id = 2, name = "Bob", level = 25 },
+        { id = 3, name = "Charlie", level = 28 },
     },
     world = {
         name = "Apocalypse",
         difficulty = "Hard",
-        seed = 12345
-    }
+        seed = 12345,
+    },
 }
 
 -- Encode to JSON string
@@ -32,4 +32,10 @@ print(jsonString)
 local decodedData = lunajson.decode(jsonString)
 print("\nDecoded successfully!")
 print("World name: " .. decodedData.world.name)
-print("First player: " .. decodedData.players[1].name .. " (Level " .. decodedData.players[1].level .. ")")
+print(
+    "First player: "
+        .. decodedData.players[1].name
+        .. " (Level "
+        .. decodedData.players[1].level
+        .. ")"
+)

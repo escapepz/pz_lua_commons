@@ -7,67 +7,69 @@ local Utilities = {}
 --- Return a IsoPlayer from its username if found
 ---@return IsoPlayer|nil
 function Utilities.GetPlayerFromUsername(username)
-	if isServer() then
-		local players = getOnlinePlayers()
-		for i = 0, players:size() - 1 do
-			local player = players:get(i)
-			if player:getUsername() == username then
-				---@type IsoPlayer
-				return player
-			end
-		end
-	elseif isClient() then
-		return getPlayerFromUsername(username)
-	end
+    if isServer() then
+        local players = getOnlinePlayers()
+        for i = 0, players:size() - 1 do
+            local player = players:get(i)
+            if player:getUsername() == username then
+                ---@type IsoPlayer
+                return player
+            end
+        end
+    elseif isClient() then
+        return getPlayerFromUsername(username)
+    end
 end
 
 --- [SHARED]
 --- Return true if game is single player
 ---@return boolean
 function Utilities.IsSinglePlayer()
-	return not isClient() and not isServer()
+    return not isClient() and not isServer()
 end
 
 --- [SHARED]
 --- Return true if game is single player with debug enabled
 ---@return boolean
 function Utilities.IsSinglePlayerDebug()
-	return Utilities.IsSinglePlayer() and isDebugEnabled()
+    return Utilities.IsSinglePlayer() and isDebugEnabled()
 end
 
 --- [CLIENT]
 --- Return true if the game is client only (not server, not single player)
 ---@return boolean
 function Utilities.IsClientOnly()
-	return isClient() and not isServer() and not Utilities.IsSinglePlayer()
+    return isClient() and not isServer() and not Utilities.IsSinglePlayer()
 end
 
 --- [CLIENT]
 --- Return true if the game is client or single player
 function Utilities.IsClientOrSinglePlayer()
-	return isClient() or Utilities.IsSinglePlayer()
+    return isClient() or Utilities.IsSinglePlayer()
 end
 
 --- [SERVER]
 --- Return true if the game is server or single player
 function Utilities.IsServerOrSinglePlayer()
-	return isServer() or Utilities.IsSinglePlayer()
+    return isServer() or Utilities.IsSinglePlayer()
 end
 
 --- [CLIENT]
 --- Return true if client is admin or single player
 ---@return boolean
 function Utilities.IsClientAdmin()
-	local playerObj = getPlayer()
-	return (instanceof(playerObj, "IsoPlayer") and playerObj:isAccessLevel("Admin")) or Utilities.IsSinglePlayer()
+    local playerObj = getPlayer()
+    return (instanceof(playerObj, "IsoPlayer") and playerObj:isAccessLevel("Admin"))
+        or Utilities.IsSinglePlayer()
 end
 
 --- [CLIENT]
 --- Return true if the client is admin or moderator
 ---@return boolean
 function Utilities.IsClientStaff()
-	local playerObj = getPlayer()
-	return Utilities.IsClientAdmin() or (instanceof(playerObj, "IsoPlayer") and playerObj:isAccessLevel("Moderator"))
+    local playerObj = getPlayer()
+    return Utilities.IsClientAdmin()
+        or (instanceof(playerObj, "IsoPlayer") and playerObj:isAccessLevel("Moderator"))
 end
 
 --- [SERVER]
@@ -75,16 +77,16 @@ end
 ---@param playerObjOrUsername IsoPlayer|string
 ---@return boolean
 function Utilities.IsPlayerAdmin(playerObjOrUsername)
-	local playerObj
-	if type(playerObjOrUsername) == "string" then
-		playerObj = Utilities.GetPlayerFromUsername(playerObjOrUsername)
-	else
-		playerObj = playerObjOrUsername
-	end
-	if not playerObj or not instanceof(playerObj, "IsoPlayer") then
-		return Utilities.IsSinglePlayerDebug()
-	end
-	return playerObj:isAccessLevel("Admin") or Utilities.IsSinglePlayerDebug()
+    local playerObj
+    if type(playerObjOrUsername) == "string" then
+        playerObj = Utilities.GetPlayerFromUsername(playerObjOrUsername)
+    else
+        playerObj = playerObjOrUsername
+    end
+    if not playerObj or not instanceof(playerObj, "IsoPlayer") then
+        return Utilities.IsSinglePlayerDebug()
+    end
+    return playerObj:isAccessLevel("Admin") or Utilities.IsSinglePlayerDebug()
 end
 
 --- [SERVER]
@@ -92,16 +94,17 @@ end
 ---@param playerObjOrUsername IsoPlayer|string
 ---@return boolean
 function Utilities.IsPlayerStaff(playerObjOrUsername)
-	local playerObj
-	if type(playerObjOrUsername) == "string" then
-		playerObj = Utilities.GetPlayerFromUsername(playerObjOrUsername)
-	else
-		playerObj = playerObjOrUsername
-	end
-	if not playerObj or not instanceof(playerObj, "IsoPlayer") then
-		return Utilities.IsSinglePlayerDebug()
-	end
-	return (playerObj:isAccessLevel("Admin") or playerObj:isAccessLevel("Moderator")) or Utilities.IsSinglePlayerDebug()
+    local playerObj
+    if type(playerObjOrUsername) == "string" then
+        playerObj = Utilities.GetPlayerFromUsername(playerObjOrUsername)
+    else
+        playerObj = playerObjOrUsername
+    end
+    if not playerObj or not instanceof(playerObj, "IsoPlayer") then
+        return Utilities.IsSinglePlayerDebug()
+    end
+    return (playerObj:isAccessLevel("Admin") or playerObj:isAccessLevel("Moderator"))
+        or Utilities.IsSinglePlayerDebug()
 end
 
 --- [CLIENT]
@@ -110,9 +113,9 @@ end
 ---@param _command string
 ---@param _data table
 function Utilities.SendClientCommand(_module, _command, _data)
-	if Utilities.IsClientOrSinglePlayer() then
-		sendClientCommand(_module, _command, _data)
-	end
+    if Utilities.IsClientOrSinglePlayer() then
+        sendClientCommand(_module, _command, _data)
+    end
 end
 
 --- [SERVER]
@@ -122,14 +125,14 @@ end
 ---@param _command string
 ---@param _data table
 function Utilities.SendServerCommandTo(_targetPlayerObj, _module, _command, _data)
-	if not Utilities.IsServerOrSinglePlayer() then
-		return
-	end
-	if Utilities.IsSinglePlayer() then
-		triggerEvent("OnServerCommand", _module, _command, _data)
-	else
-		sendServerCommand(_targetPlayerObj, _module, _command, _data)
-	end
+    if not Utilities.IsServerOrSinglePlayer() then
+        return
+    end
+    if Utilities.IsSinglePlayer() then
+        triggerEvent("OnServerCommand", _module, _command, _data)
+    else
+        sendServerCommand(_targetPlayerObj, _module, _command, _data)
+    end
 end
 
 --- [SERVER]
@@ -138,15 +141,15 @@ end
 ---@param _command string
 ---@param _data table
 function Utilities.SendServerCommandToAll(_module, _command, _data)
-	if not Utilities.IsServerOrSinglePlayer() then
-		return
-	end
+    if not Utilities.IsServerOrSinglePlayer() then
+        return
+    end
 
-	if Utilities.IsSinglePlayer() then
-		triggerEvent("OnServerCommand", _module, _command, _data)
-	else
-		sendServerCommand(_module, _command, _data)
-	end
+    if Utilities.IsSinglePlayer() then
+        triggerEvent("OnServerCommand", _module, _command, _data)
+    else
+        sendServerCommand(_module, _command, _data)
+    end
 end
 
 --- [SERVER]
@@ -159,24 +162,33 @@ end
 ---@param _module string
 ---@param _command string
 ---@param _data table
-function Utilities.SendServerCommandToAllInRange(_x, _y, _z, _distanceMin, _distanceMax, _module, _command, _data)
-	if not Utilities.IsServerOrSinglePlayer() then
-		return
-	end
+function Utilities.SendServerCommandToAllInRange(
+    _x,
+    _y,
+    _z,
+    _distanceMin,
+    _distanceMax,
+    _module,
+    _command,
+    _data
+)
+    if not Utilities.IsServerOrSinglePlayer() then
+        return
+    end
 
-	if Utilities.IsSinglePlayer() then
-		if Utilities.IsPlayerInRange(getPlayer(), _x, _y, _z, _distanceMin, _distanceMax) then
-			triggerEvent("OnServerCommand", _module, _command, _data)
-		end
-	else
-		local players = getOnlinePlayers()
-		for i = 0, players:size() - 1 do
-			local targetPlayer = players:get(i)
-			if Utilities.IsPlayerInRange(targetPlayer, _x, _y, _z, _distanceMin, _distanceMax) then
-				sendServerCommand(targetPlayer, _module, _command, _data)
-			end
-		end
-	end
+    if Utilities.IsSinglePlayer() then
+        if Utilities.IsPlayerInRange(getPlayer(), _x, _y, _z, _distanceMin, _distanceMax) then
+            triggerEvent("OnServerCommand", _module, _command, _data)
+        end
+    else
+        local players = getOnlinePlayers()
+        for i = 0, players:size() - 1 do
+            local targetPlayer = players:get(i)
+            if Utilities.IsPlayerInRange(targetPlayer, _x, _y, _z, _distanceMin, _distanceMax) then
+                sendServerCommand(targetPlayer, _module, _command, _data)
+            end
+        end
+    end
 end
 
 --- [SHARED]
@@ -188,89 +200,89 @@ end
 ---@param _distanceMax number
 ---@return boolean
 function Utilities.IsPlayerInRange(_playerObj, _x, _y, _z, _distanceMin, _distanceMax)
-	if not _playerObj then
-		return false
-	end
-	local x2, y2, z2 = _playerObj:getX(), _playerObj:getY(), _playerObj:getZ()
-	local currentDistance = IsoUtils.DistanceTo(_x, _y, _z, x2, y2, z2)
-	return (currentDistance >= _distanceMin and currentDistance <= _distanceMax)
+    if not _playerObj then
+        return false
+    end
+    local x2, y2, z2 = _playerObj:getX(), _playerObj:getY(), _playerObj:getZ()
+    local currentDistance = IsoUtils.DistanceTo(_x, _y, _z, x2, y2, z2)
+    return (currentDistance >= _distanceMin and currentDistance <= _distanceMax)
 end
 
 --- Check if a square is powerred
 function Utilities.SquareHasElectricity(square)
-	return (SandboxVars.AllowExteriorGenerator and square and square:haveElectricity())
-		or (
-			SandboxVars.ElecShutModifier > -1
-			and GameTime:getInstance():getNightsSurvived() < SandboxVars.ElecShutModifier
-		)
+    return (SandboxVars.AllowExteriorGenerator and square and square:haveElectricity())
+        or (
+            SandboxVars.ElecShutModifier > -1
+            and GameTime:getInstance():getNightsSurvived() < SandboxVars.ElecShutModifier
+        )
 end
 
 ---@deprecated no ServerOptions.ServerOption:getValue()
 --- Get the server name or the save file name in single player
 function Utilities.GetServerName()
-	if Utilities.IsSinglePlayer() then
-		local world = getWorld():getWorld()
-		if type(world) == "string" and world ~= "" then
-			local saveInfo = getSaveInfo(world)
-			if saveInfo and saveInfo.gameMode then
-				return saveInfo.saveName
-			end
-		end
-		return "SinglePlayerGame"
-	else
-		---@diagnostic disable-next-line: undefined-field
-		return getServerOptions():getOptionByName("PublicName"):getValue()
-	end
-	return "Unknown"
+    if Utilities.IsSinglePlayer() then
+        local world = getWorld():getWorld()
+        if type(world) == "string" and world ~= "" then
+            local saveInfo = getSaveInfo(world)
+            if saveInfo and saveInfo.gameMode then
+                return saveInfo.saveName
+            end
+        end
+        return "SinglePlayerGame"
+    else
+        ---@diagnostic disable-next-line: undefined-field
+        return getServerOptions():getOptionByName("PublicName"):getValue()
+    end
+    return "Unknown"
 end
 
 function Utilities.SplitString(str, delimiter)
-	local result = {}
-	for match in (str .. delimiter):gmatch("(.-)%" .. delimiter) do
-		table.insert(result, match)
-	end
-	return result
+    local result = {}
+    for match in (str .. delimiter):gmatch("(.-)%" .. delimiter) do
+        table.insert(result, match)
+    end
+    return result
 end
 
 function Utilities.SquareToString(square)
-	if square then
-		return square:getX() .. "|" .. square:getY() .. "|" .. square:getZ()
-	end
+    if square then
+        return square:getX() .. "|" .. square:getY() .. "|" .. square:getZ()
+    end
 end
 
 function Utilities.StringToSquare(string)
-	local split = Utilities.SplitString(string, "|")
-	if #split >= 3 then
-		local x, y, z = tonumber(split[1]) or 0, tonumber(split[2]) or 0, tonumber(split[3]) or 0
-		return getCell():getGridSquare(x, y, z)
-	end
+    local split = Utilities.SplitString(string, "|")
+    if #split >= 3 then
+        local x, y, z = tonumber(split[1]) or 0, tonumber(split[2]) or 0, tonumber(split[3]) or 0
+        return getCell():getGridSquare(x, y, z)
+    end
 end
 
 function Utilities.FindAllItemInInventoryByTag(inventory, tag)
-	local foundItems = ArrayList.new()
-	local validItems = getScriptManager():getItemsTag(tag)
-	for i = 0, validItems:size() - 1 do
-		foundItems:addAll(inventory:getItemsFromFullType(validItems:get(i):getFullName()))
-	end
-	return foundItems
+    local foundItems = ArrayList.new()
+    local validItems = getScriptManager():getItemsTag(tag)
+    for i = 0, validItems:size() - 1 do
+        foundItems:addAll(inventory:getItemsFromFullType(validItems:get(i):getFullName()))
+    end
+    return foundItems
 end
 
 function Utilities.GetMoveableDisplayName(obj)
-	if not obj then
-		return nil
-	end
-	if not obj:getSprite() then
-		return nil
-	end
-	local props = obj:getSprite():getProperties()
-	if props:Is("CustomName") then
-		local name = props:Val("CustomName")
-		if props:Is("GroupName") then
-			name = props:Val("GroupName") .. " " .. name
-		end
-		return Translator.getMoveableDisplayName(name)
-	end
-	return nil
+    if not obj then
+        return nil
+    end
+    if not obj:getSprite() then
+        return nil
+    end
+    local props = obj:getSprite():getProperties()
+    if props:Is("CustomName") then
+        local name = props:Val("CustomName")
+        if props:Is("GroupName") then
+            name = props:Val("GroupName") .. " " .. name
+        end
+        return Translator.getMoveableDisplayName(name)
+    end
+    return nil
 end
 
 return Utilities
