@@ -1,8 +1,8 @@
 author=escapepz
 
 id=pz_lua_commons
-name=
-description=
+name=PZ Lua Commons
+description=A curated collection of Lua libraries maintained for Project Zomboid.
 
 poster=poster.png
 icon=icon.png

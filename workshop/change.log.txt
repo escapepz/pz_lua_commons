@@ -1,0 +1,17 @@
+v1.0.4
+
+Changes:
+- revert the mod.info name and desc
+- fix pz_commons.rxi.jsonlua
+- fix pz_commons.grafi_tt.lunajson
+
+https://github.com/escapepz/pz_lua_commons/releases/tag/v1.0.4
+
+v1.0.3
+- add support for 42.15.0
+- workshop image 512x512
+
+https://github.com/escapepz/pz_lua_commons/releases/tag/v1.0.3
+
+v1.0.0
+first release
