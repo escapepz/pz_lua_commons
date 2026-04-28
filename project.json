@@ -1,25 +1,27 @@
 {
-    "$schema": "https://raw.githubusercontent.com/escapepz/project-zomboid-studio/refs/heads/b42.13.1/pzstudio.schema.json",
+  "$schema": "https://raw.githubusercontent.com/escapepz/project-zomboid-studio/refs/heads/42.17.0/pzstudio.schema.json",
+  "workshop": {
     "title": "PZ Lua Commons",
-    "authors": ["escapepz"],
-    "workshop": {
-        "id": 3672788969,
-        "visibility": "public",
-        "tags": ["Build 42", "Framework", "WIP"],
-        "excludes": ["pz_lua_commons_test", "pz_lua_commons_example"]
+    "id": 3672788969,
+    "visibility": "public",
+    "tags": ["Build 42", "Framework", "WIP"]
+  },
+  "excludes": ["pz_lua_commons_test", "pz_lua_commons_example"],
+  "mods": {
+    "pz_lua_commons": {
+      "author": "escapepz",
+      "name": "PZ Lua Commons",
+      "description": "A curated collection of Lua libraries maintained for Project Zomboid.",
+      "modversion": "1.0.2",
+      "versionMin": "42.13.1"
     },
-    "mods": {
-        "pz_lua_commons": {
-            "name": "PZ Lua Commons",
-            "description": "A curated collection of Lua libraries maintained for Project Zomboid."
-        },
-        "pz_lua_commons_test": {
-            "name": "pz_lua_commons_test",
-            "description": ""
-        },
-        "pz_lua_commons_example": {
-            "name": "pz_lua_commons_example",
-            "description": ""
-        }
+    "pz_lua_commons_test": {
+      "name": "pz_lua_commons_test",
+      "description": ""
+    },
+    "pz_lua_commons_example": {
+      "name": "pz_lua_commons_example",
+      "description": ""
     }
+  }
 }
